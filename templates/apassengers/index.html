@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yatra Saarthi – Passenger Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateInit" async></script>
+    <style>
+        :root {
+            --navy:  #0B1F3A;
+            --blue:  #1A3A5C;
+            --orange:#E65100;
+            --amber: #FFA000;
+            --light: #F4F6F9;
+        }
+        * { font-family: Verdana, Geneva, Tahoma, sans-serif !important; }
+        body { background: var(--light); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* ── Top Ticker ── */
+        .ticker-bar {
+            background: var(--orange);
+            color: #fff;
+            font-size: 0.72rem;
+            padding: 4px 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .ticker-inner { display: inline-block; animation: ticker 30s linear infinite; }
+        @keyframes ticker { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+
+        /* ── Navbar ── */
+        .main-nav {
+            background: var(--navy);
+            border-bottom: 3px solid var(--orange);
+            padding: 0 1.5rem;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 0.6rem;
+            text-decoration: none; color: #fff; font-weight: 800; font-size: 1.15rem;
+        }
+        .nav-brand .bus-pill {
+            background: var(--orange);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .nav-brand .site-name { color: var(--amber); }
+        .nav-links { display: flex; align-items: center; gap: 0.3rem; margin-left: auto; }
+        .nav-links a {
+            color: rgba(255,255,255,0.75);
+            text-decoration: none;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.15s;
+            display: flex; align-items: center; gap: 0.35rem;
+        }
+        .nav-links a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .nav-links a.active { background: var(--orange); color: #fff; }
+        .nav-links .lang-btns { display: flex; gap: 4px; margin-left: 0.5rem; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 0.5rem; }
+        .nav-links .lang-btns button {
+            background: rgba(255,255,255,0.1);
+            border: none; color: #fff; border-radius: 3px;
+            padding: 3px 8px; font-size: 0.7rem; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .nav-links .lang-btns button:hover, .nav-links .lang-btns button.active { background: var(--orange); }
+
+        /* ── Hero ── */
+        .hero {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a3a5c 60%, #0d3b6e 100%);
+            color: #fff;
+            padding: 3rem 0 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 4px;
+            background: repeating-linear-gradient(90deg, var(--orange) 0 40px, var(--amber) 40px 80px, transparent 80px 120px);
+        }
+        /* Road at hero bottom */
+        .hero-road {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 28px;
+            background: #1a1a1a;
+            overflow: hidden;
+        }
+        .hero-road::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 0;
+            width: 200%;
+            height: 3px;
+            background: repeating-linear-gradient(90deg, rgba(255,255,255,0.8) 0 50px, transparent 50px 100px);
+            transform: translateY(-50%);
+            animation: roadMove 3s linear infinite;
+        }
+        @keyframes roadMove { 0% { transform: translateX(0) translateY(-50%); } 100% { transform: translateX(-50%) translateY(-50%); } }
+        /* Animated mini-bus in hero */
+        .hero-bus {
+            position: absolute;
+            bottom: 5px;
+            left: -100px;
+            width: 70px; height: 42px;
+            animation: heroBusMove 10s linear infinite;
+        }
+        .hero-bus .hb-body { width: 70px; height: 34px; background: linear-gradient(to bottom, #FFD700, #E6A800); border-radius: 7px; position: relative; }
+        .hero-bus .hb-body::before { content: ''; position: absolute; left: 4px; top: 6px; width: 18px; height: 14px; background: rgba(155,210,255,0.85); border-radius: 2px; }
+        .hero-bus .hb-body::after { content: ''; position: absolute; right: 5px; top: 5px; width: 30px; height: 13px; background: rgba(155,210,255,0.85); border-radius: 2px; }
+        .hero-bus .hb-w { position: absolute; bottom: -5px; width: 14px; height: 14px; background: #222; border: 3px solid #555; border-radius: 50%; }
+        .hero-bus .hb-w.l { left: 8px; } .hero-bus .hb-w.r { right: 8px; }
+        @keyframes heroBusMove { 0% { left: -100px; } 100% { left: 110%; } }
+
+        .hero-content { position: relative; z-index: 2; padding-bottom: 2rem; }
+        .hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.4rem; line-height: 1.2; }
+        .hero h1 span { color: var(--amber); }
+        .hero p { color: rgba(255,255,255,0.75); font-size: 0.9rem; margin-bottom: 0; }
+        .hero-badge {
+            display: inline-block;
+            background: var(--orange);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Quick search bar */
+        .search-bar-wrap {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            backdrop-filter: blur(6px);
+        }
+        .search-bar-wrap label { color: rgba(255,255,255,0.8); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .search-bar-wrap .form-control, .search-bar-wrap .form-select {
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: var(--navy);
+            font-size: 0.85rem;
+        }
+        .search-bar-wrap .form-control::placeholder { color: #aaa; }
+        .search-bar-wrap .btn-search {
+            background: var(--orange);
+            color: #fff;
+            border: none;
+            font-weight: 700;
+            font-size: 0.88rem;
+            padding: 0.55rem 1.5rem;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+        .search-bar-wrap .btn-search:hover { background: #bf360c; }
+
+        /* ── Service Cards ── */
+        .service-section { padding: 2rem 0; }
+        .service-card {
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            height: 100%;
+            border-top: 4px solid var(--orange);
+        }
+        .service-card:hover { transform: translateY(-5px); box-shadow: 0 8px 24px rgba(0,0,0,0.14); color: inherit; }
+        .service-card .card-icon {
+            height: 110px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem;
+        }
+        .service-card .card-body { padding: 1rem 1.25rem 1.25rem; }
+        .service-card .card-title { font-size: 0.95rem; font-weight: 800; color: var(--navy); margin-bottom: 0.3rem; }
+        .service-card .card-text { font-size: 0.78rem; color: #6c757d; margin-bottom: 0.75rem; }
+        .service-card .card-action { font-size: 0.75rem; font-weight: 700; color: var(--orange); display: flex; align-items: center; gap: 0.3rem; }
+
+        /* Icon backgrounds */
+        .icon-orange { background: linear-gradient(135deg, #FFF3E0, #FFE0B2); }
+        .icon-blue   { background: linear-gradient(135deg, #E3F2FD, #BBDEFB); }
+        .icon-green  { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); }
+        .icon-purple { background: linear-gradient(135deg, #EDE7F6, #D1C4E9); }
+        .icon-teal   { background: linear-gradient(135deg, #E0F2F1, #B2DFDB); }
+        .icon-red    { background: linear-gradient(135deg, #FFEBEE, #FFCDD2); }
+
+        /* ── Departure Board ── */
+        .board-section { padding: 0 0 2rem; }
+        .board-header {
+            background: var(--navy);
+            color: var(--amber);
+            border-radius: 8px 8px 0 0;
+            padding: 0.75rem 1.25rem;
+            display: flex; align-items: center; justify-content: space-between;
+            font-weight: 700; font-size: 0.9rem;
+        }
+        .board-body { background: #111827; border-radius: 0 0 8px 8px; padding: 0.5rem; overflow: hidden; }
+        .board-row {
+            display: flex; align-items: center;
+            padding: 0.55rem 0.75rem;
+            border-bottom: 1px solid #1f2d3d;
+            font-size: 0.8rem;
+            animation: boardIn 0.4s ease;
+        }
+        @keyframes boardIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .board-row:last-child { border-bottom: none; }
+        .board-row .br-num { color: var(--amber); font-weight: 800; font-size: 0.85rem; width: 90px; flex-shrink: 0; font-family: 'Courier New', monospace !important; }
+        .board-row .br-route { color: #fff; flex: 1; font-size: 0.78rem; }
+        .board-row .br-route .via { color: rgba(255,255,255,0.45); font-size: 0.68rem; display: block; }
+        .board-row .br-time { color: #4ade80; font-family: 'Courier New', monospace !important; font-weight: 700; font-size: 0.88rem; margin-left: 0.75rem; }
+        .board-row .br-status { margin-left: 0.75rem; }
+        .board-empty { color: rgba(255,255,255,0.35); text-align: center; padding: 2rem; font-size: 0.82rem; }
+
+        /* ── Info Strip ── */
+        .info-strip {
+            background: var(--navy);
+            color: rgba(255,255,255,0.8);
+            padding: 1.25rem 0;
+        }
+        .info-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem; }
+        .info-item i { font-size: 1.3rem; color: var(--amber); }
+        .info-item .label { color: rgba(255,255,255,0.45); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .info-item .value { font-weight: 700; color: #fff; }
+
+        /* ── Footer ── */
+        footer { background: #0a1628; color: rgba(255,255,255,0.5); padding: 1rem 0; margin-top: auto; }
+        footer .footer-brand { color: var(--amber); font-weight: 700; }
+        footer small { font-size: 0.72rem; }
+
+        /* Google translate hide */
+        .goog-te-banner-frame, #goog-te-banner-frame { display: none !important; }
+        body { top: 0 !important; }
+        .skiptranslate { display: none !important; }
+        #google_translate_element { display: none; }
+    </style>
+</head>
+<body>
+
+<!-- Ticker -->
+<div class="ticker-bar">
+    <span class="ticker-inner">
+        &nbsp;&nbsp;🚌 Welcome to Yatra Saarthi – Your Smart Transport Companion &nbsp;|&nbsp;
+        Check real-time bus timetables, plan your journey, explore tourism spots &nbsp;|&nbsp;
+        TNSTC • SETC • Private Operators covered &nbsp;|&nbsp;
+        Weather updates for all major cities &nbsp;|&nbsp;
+        Safe travels – Nextlinkers | Design Build Operate | KARE University &nbsp;|&nbsp;
+        🚌 Welcome to Yatra Saarthi – Your Smart Transport Companion &nbsp;&nbsp;
+    </span>
+</div>
+
+<!-- Navbar -->
+<nav class="main-nav">
+    <a class="nav-brand" href="{{ url_for('passengers_home') }}">
+        <div class="bus-pill"><i class="bi bi-bus-front-fill"></i> Yatra</div>
+        <span class="site-name">Saarthi</span>
+    </a>
+    <div class="nav-links">
+        <a href="{{ url_for('passengers_home') }}" class="active"><i class="bi bi-house-fill"></i> Home</a>
+        <a href="{{ url_for('passenger_timetables') }}"><i class="bi bi-clock-history"></i> Timetables</a>
+        <a href="{{ url_for('weather_page') }}"><i class="bi bi-cloud-sun-fill"></i> Weather</a>
+        <a href="{{ url_for('train_map') }}"><i class="bi bi-train-front-fill"></i> Train Map</a>
+        <a href="{{ url_for('tourism_page') }}"><i class="bi bi-camera-fill"></i> Tourism</a>
+        <a href="{{ url_for('passengers_plan') }}"><i class="bi bi-compass-fill"></i> Plan Trip</a>
+        <a href="{{ url_for('login') }}" style="border-left:1px solid rgba(255,255,255,0.15);margin-left:0.25rem;padding-left:0.75rem;">
+            <i class="bi bi-shield-lock-fill"></i> Admin
+        </a>
+        <div class="lang-btns">
+            <button id="lang-en" onclick="switchLang('en')" class="active">EN</button>
+            <button id="lang-ta" onclick="switchLang('ta')">தமிழ்</button>
+            <button id="lang-te" onclick="switchLang('te')">తెలుగు</button>
+        </div>
+    </div>
+</nav>
+
+<div id="google_translate_element"></div>
+
+<!-- ── Hero ── -->
+<section class="hero">
+    <div class="container hero-content">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-5">
+                <div class="hero-badge">🚌 Smart Transport Portal</div>
+                <h1>Plan Your <span>Journey</span><br>with Confidence</h1>
+                <p>Real-time bus schedules, route planning, weather updates and tourism info — all in one place for Tamil Nadu travellers.</p>
+                <div class="d-flex gap-2 mt-3 flex-wrap">
+                    <a href="{{ url_for('passenger_timetables') }}" class="btn btn-warning btn-sm fw-bold">
+                        <i class="bi bi-clock-fill me-1"></i> View Timetables
+                    </a>
+                    <a href="{{ url_for('passengers_plan') }}" class="btn btn-outline-light btn-sm fw-bold">
+                        <i class="bi bi-compass me-1"></i> Plan My Trip
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <!-- Quick Search -->
+                <div class="search-bar-wrap">
+                    <p class="text-white fw-bold mb-2" style="font-size:0.85rem;">
+                        <i class="bi bi-search me-2" style="color:var(--amber);"></i>Search Bus Timetable
+                    </p>
+                    <form method="GET" action="{{ url_for('passenger_timetables') }}" class="row g-2">
+                        <div class="col-sm-5">
+                            <label class="form-label mb-1">From</label>
+                            <input type="text" class="form-control" name="origin" placeholder="Origin city…" list="heroFromList">
+                            <datalist id="heroFromList">
+                                <option value="Srivilliputhur"><option value="Krishnankovil">
+                                <option value="Sivakasi"><option value="Madurai">
+                                <option value="Chennai"><option value="Bengaluru">
+                                <option value="Coimbatore"><option value="Trichy">
+                            </datalist>
+                        </div>
+                        <div class="col-sm-5">
+                            <label class="form-label mb-1">To</label>
+                            <input type="text" class="form-control" name="destination" placeholder="Destination city…" list="heroToList">
+                            <datalist id="heroToList">
+                                <option value="Madurai"><option value="Chennai">
+                                <option value="Bengaluru"><option value="Coimbatore">
+                                <option value="Trichy"><option value="Salem">
+                                <option value="Srivilliputhur"><option value="Krishnankovil">
+                            </datalist>
+                        </div>
+                        <div class="col-sm-2 d-flex align-items-end">
+                            <button type="submit" class="btn-search w-100">
+                                <i class="bi bi-search"></i> Go
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Animated road + bus -->
+    <div class="hero-road">
+        <div class="hero-bus">
+            <div class="hb-body">
+                <div class="hb-w l"></div>
+                <div class="hb-w r"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Service Cards ── -->
+<section class="service-section">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-800 mb-0" style="color:var(--navy); font-weight:800;">
+                <span style="border-left:4px solid var(--orange);padding-left:0.6rem;">Our Services</span>
+            </h5>
+            <span class="text-muted small">Tap any card to explore</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('passenger_timetables') }}" class="service-card">
+                    <div class="card-icon icon-orange"><i class="bi bi-clock-history" style="color:#E65100;"></i></div>
+                    <div class="card-body">
+                        <div class="card-title">Timetables</div>
+                        <div class="card-text">Govt &amp; private bus schedules</div>
+                        <div class="card-action"><i class="bi bi-arrow-right-circle-fill"></i> View</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('passengers_plan') }}" class="service-card" style="border-top-color:#1565C0;">
+                    <div class="card-icon icon-blue"><i class="bi bi-compass-fill" style="color:#1565C0;"></i></div>
+                    <div class="card-body">
+                        <div class="card-title">Plan Trip</div>
+                        <div class="card-text">Multi-modal route planner</div>
+                        <div class="card-action" style="color:#1565C0;"><i class="bi bi-arrow-right-circle-fill"></i> Plan</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('weather_page') }}" class="service-card" style="border-top-color:#00796B;">
+                    <div class="card-icon icon-teal"><i class="bi bi-cloud-sun-fill" style="color:#00796B;"></i></div>
+                    <div class="card-body">
+                        <div class="card-title">Weather</div>
+                        <div class="card-text">Live weather for all routes</div>
+                        <div class="card-action" style="color:#00796B;"><i class="bi bi-arrow-right-circle-fill"></i> Check</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('train_map') }}" class="service-card" style="border-top-color:#6A1B9A;">
+                    <div class="card-icon icon-purple"><i class="bi bi-train-front-fill" style="color:#6A1B9A;"></i></div>
+                    <div class="card-body">
+                        <div class="card-title">Train Map</div>
+                        <div class="card-text">Railway network &amp; stations</div>
+                        <div class="card-action" style="color:#6A1B9A;"><i class="bi bi-arrow-right-circle-fill"></i> Explore</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('tourism_page') }}" class="service-card" style="border-top-color:#2E7D32;">
+                    <div class="card-icon icon-green"><i class="bi bi-camera-fill" style="color:#2E7D32;"></i></div>
+                    <div class="card-body">
+                        <div class="card-title">Tourism</div>
+                        <div class="card-text">Discover places near you</div>
+                        <div class="card-action" style="color:#2E7D32;"><i class="bi bi-arrow-right-circle-fill"></i> Discover</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a href="{{ url_for('travel_guide') }}" class="service-card" style="border-top-color:#C62828;">
+                    <div class="card-icon icon-red"><i class="bi bi-map-fill" style="color:#C62828;"></i></div>
+                    <div class="card-body">
+                        <div class="card-title">Travel Guide</div>
+                        <div class="card-text">Routes, tips &amp; landmarks</div>
+                        <div class="card-action" style="color:#C62828;"><i class="bi bi-arrow-right-circle-fill"></i> Guide</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Live Departure Board ── -->
+<section class="board-section">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Departure Board -->
+            <div class="col-lg-7">
+                <div class="board-header">
+                    <span><i class="bi bi-display me-2"></i>Live Departure Board</span>
+                    <span style="font-size:0.72rem;color:rgba(255,200,0,0.6);" id="boardClock"></span>
+                </div>
+                <div class="board-body" id="departureBoard">
+                    {% if active_services %}
+                        {% for svc in active_services[:8] %}
+                        <div class="board-row">
+                            <div class="br-num">{{ svc.service_number or svc.bus_number or '—' }}</div>
+                            <div class="br-route">
+                                {{ svc.origin or '—' }} → {{ svc.destination or '—' }}
+                                {% if svc.via_routes %}
+                                <span class="via">via {{ svc.via_routes|join(', ') if svc.via_routes is iterable and svc.via_routes is not string }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="br-time">{{ svc.departure_time.strftime('%H:%M') if svc.departure_time else '--:--' }}</div>
+                            <div class="br-status">
+                                <span class="badge bg-{{ 'success' if svc.status == 'active' else 'warning text-dark' }}">
+                                    {{ svc.status|title if svc.status else 'Active' }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="board-empty">
+                            <i class="bi bi-clock" style="font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                            No live services at this time.<br>
+                            <a href="{{ url_for('passenger_timetables') }}" style="color:var(--amber);font-size:0.78rem;">View full timetable →</a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="text-end mt-1">
+                    <a href="{{ url_for('passenger_timetables') }}" style="color:var(--orange);font-size:0.78rem;font-weight:700;">
+                        View full timetable <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Info Panel -->
+            <div class="col-lg-5">
+                <!-- Important Routes -->
+                <div class="card mb-3" style="border-top:4px solid var(--orange);">
+                    <div class="card-header bg-white text-dark py-2">
+                        <i class="bi bi-signpost-2-fill me-2" style="color:var(--orange);"></i>
+                        <strong>Key Routes</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        {% set routes = [
+                            ('Srivilliputhur','Madurai'),
+                            ('Krishnankovil','Chennai'),
+                            ('Madurai','Bengaluru'),
+                            ('Sivakasi','Coimbatore'),
+                            ('Madurai','Chennai')
+                        ] %}
+                        {% for from_, to_ in routes %}
+                        <a href="{{ url_for('passenger_timetables', origin=from_, destination=to_) }}"
+                           class="d-flex align-items-center px-3 py-2 text-decoration-none border-bottom"
+                           style="color:var(--navy);font-size:0.8rem;transition:background 0.1s;"
+                           onmouseover="this.style.background='#F4F6F9'" onmouseout="this.style.background=''">
+                            <span class="fw-bold" style="min-width:130px;">{{ from_ }}</span>
+                            <i class="bi bi-arrow-right mx-2" style="color:var(--orange);"></i>
+                            <span class="fw-bold">{{ to_ }}</span>
+                            <i class="bi bi-chevron-right ms-auto" style="color:#ccc;font-size:0.7rem;"></i>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Help card -->
+                <div class="card" style="background:var(--navy);color:#fff;border:none;">
+                    <div class="card-body py-3 px-3">
+                        <div class="fw-bold mb-1" style="color:var(--amber);"><i class="bi bi-telephone-fill me-2"></i>Need Help?</div>
+                        <div style="font-size:0.78rem;color:rgba(255,255,255,0.75);">Contact our support team for assistance with routes, timetables or bookings.</div>
+                        <div class="mt-2" style="font-size:0.75rem;color:rgba(255,200,0,0.8);">
+                            <i class="bi bi-envelope me-1"></i> 99230041300@klu.ac.in
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Info Strip ── -->
+<div class="info-strip">
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <div class="info-item">
+                    <i class="bi bi-bus-front-fill"></i>
+                    <div>
+                        <div class="label">Coverage</div>
+                        <div class="value">Tamil Nadu</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="info-item">
+                    <i class="bi bi-building"></i>
+                    <div>
+                        <div class="label">Operators</div>
+                        <div class="value">TNSTC · SETC · Private</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="info-item">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <div>
+                        <div class="label">Key Cities</div>
+                        <div class="value">Madurai · Chennai · Bengaluru</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="info-item">
+                    <i class="bi bi-shield-check-fill"></i>
+                    <div>
+                        <div class="label">Project</div>
+                        <div class="value">KARE – Design Build Operate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="container text-center">
+        <small>
+            <span class="footer-brand">Yatra Saarthi</span> &nbsp;|&nbsp;
+            Designed &amp; developed by <strong style="color:var(--amber);">Nextlinkers</strong>
+            under Design Build Operate at
+            <strong style="color:var(--amber);">KARE – Kalasalingam Academy of Research &amp; Education</strong>
+        </small>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* Live clock */
+function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    const el = document.getElementById('boardClock');
+    if (el) el.textContent = h + ':' + m + ':' + s;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* Language switcher */
+function googleTranslateInit() {
+    new google.translate.TranslateElement({ pageLanguage:'en', includedLanguages:'ta,te,hi,kn,ml,en', autoDisplay:false }, 'google_translate_element');
+}
+function switchLang(lang) {
+    document.querySelectorAll('.lang-btns button').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('lang-'+lang);
+    if (btn) btn.classList.add('active');
+    const sel = document.querySelector('.goog-te-combo');
+    if (sel) { sel.value = lang; sel.dispatchEvent(new Event('change')); }
+    else {
+        document.cookie = 'googtrans=/en/'+lang+'; path=/';
+        if (lang !== 'en') location.reload();
+    }
+    localStorage.setItem('preferredLang', lang);
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('preferredLang');
+    if (saved && saved !== 'en') setTimeout(() => switchLang(saved), 800);
+});
+</script>
+</body>
+</html>

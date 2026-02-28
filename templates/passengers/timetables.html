@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Options – Yatra Saarthi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateInit" async></script>
+    <style>
+        :root {
+            --navy:  #0B1F3A;
+            --blue:  #1A3A5C;
+            --orange:#E65100;
+            --amber: #FFA000;
+            --light: #F4F6F9;
+        }
+        * { font-family: Verdana, Geneva, Tahoma, sans-serif !important; }
+        body { background:var(--light); margin:0; display:flex; flex-direction:column; min-height:100vh; }
+
+        /* Ticker */
+        .ticker-bar { background:var(--orange); color:#fff; font-size:0.72rem; padding:4px 0; overflow:hidden; white-space:nowrap; }
+        .ticker-inner { display:inline-block; animation:ticker 32s linear infinite; }
+        @keyframes ticker { 0%{transform:translateX(100vw);} 100%{transform:translateX(-100%);} }
+
+        /* Navbar */
+        .main-nav { background:var(--navy); border-bottom:3px solid var(--orange); padding:0 1.5rem; height:60px; display:flex; align-items:center; position:sticky; top:0; z-index:1000; box-shadow:0 2px 12px rgba(0,0,0,0.35); }
+        .nav-brand { display:flex; align-items:center; gap:0.6rem; text-decoration:none; color:#fff; font-weight:800; font-size:1.1rem; }
+        .nav-brand .bus-pill { background:var(--orange); border-radius:6px; padding:4px 10px; font-size:0.82rem; display:flex; align-items:center; gap:0.4rem; }
+        .nav-brand .site-name { color:var(--amber); }
+        .nav-links { display:flex; align-items:center; gap:0.25rem; margin-left:auto; flex-wrap:wrap; }
+        .nav-links a { color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.78rem; padding:5px 10px; border-radius:4px; transition:all 0.15s; display:flex; align-items:center; gap:0.3rem; }
+        .nav-links a:hover { background:rgba(255,255,255,0.12); color:#fff; }
+        .nav-links a.active { background:var(--orange); color:#fff; }
+        .lang-btns { display:flex; gap:4px; margin-left:0.5rem; border-left:1px solid rgba(255,255,255,0.2); padding-left:0.5rem; }
+        .lang-btns button { background:rgba(255,255,255,0.1); border:none; color:#fff; border-radius:3px; padding:3px 8px; font-size:0.68rem; cursor:pointer; }
+        .lang-btns button.active { background:var(--orange); }
+
+        /* Page header */
+        .page-header { background:var(--navy); color:#fff; padding:1.25rem 0 1rem; border-bottom:3px solid var(--orange); }
+        .page-header h2 { font-size:1.3rem; font-weight:800; margin:0; }
+        .page-header p { color:rgba(255,255,255,0.6); font-size:0.78rem; margin:0.15rem 0 0; }
+
+        /* Search */
+        .search-panel { background:#fff; padding:1.1rem 0; box-shadow:0 2px 8px rgba(0,0,0,0.07); margin-bottom:1.25rem; }
+        .search-panel label { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--navy); }
+        .search-panel .form-control { border:1.5px solid #dce3ec; font-size:0.85rem; }
+        .search-panel .form-control:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(230,81,0,0.1); }
+        .btn-search { background:var(--orange); color:#fff; border:none; font-weight:700; font-size:0.88rem; padding:0.55rem 1.5rem; border-radius:6px; }
+        .btn-search:hover { background:#bf360c; color:#fff; }
+        .btn-clear { font-size:0.78rem; color:var(--orange); font-weight:700; text-decoration:none; }
+
+        /* ── Mode summary strip ── */
+        .mode-strip { display:flex; gap:0.6rem; overflow-x:auto; padding:0.75rem 0; flex-wrap:nowrap; }
+        .mode-chip {
+            flex-shrink:0;
+            display:flex; align-items:center; gap:0.5rem;
+            background:#fff;
+            border:2px solid #e0e4ec;
+            border-radius:10px;
+            padding:0.5rem 1rem;
+            cursor:pointer;
+            transition:all 0.15s;
+            text-decoration:none;
+            color:var(--navy);
+            font-size:0.78rem;
+            font-weight:700;
+        }
+        .mode-chip:hover { border-color:var(--orange); color:var(--orange); }
+        .mode-chip.active { background:var(--navy); border-color:var(--navy); color:var(--amber); }
+        .mode-chip .chip-icon { font-size:1.3rem; }
+        .mode-chip .chip-count { font-size:0.65rem; color:#888; font-weight:400; display:block; }
+        .mode-chip.active .chip-count { color:rgba(255,200,0,0.6); }
+
+        /* ── Section headers ── */
+        .sec-header {
+            background:var(--navy); color:var(--amber);
+            padding:0.65rem 1.1rem;
+            border-radius:6px 6px 0 0;
+            display:flex; align-items:center; justify-content:space-between;
+            font-weight:800; font-size:0.88rem;
+        }
+        .sec-header .cnt { background:var(--orange); color:#fff; border-radius:20px; padding:1px 9px; font-size:0.7rem; }
+
+        /* Tables */
+        .dep-table { border-radius:0 0 6px 6px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem; }
+        .dep-table table { margin:0; }
+        .dep-table thead th { background:var(--blue); color:#fff; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; border:none; padding:0.55rem 0.75rem; white-space:nowrap; }
+        .dep-table tbody tr:hover { background:#EEF2F7; }
+        .dep-table td { font-size:0.79rem; vertical-align:middle; padding:0.5rem 0.75rem; border-color:#e8edf2; }
+
+        /* Time badge */
+        .t { font-family:'Courier New',monospace !important; font-weight:800; font-size:0.83rem; background:var(--navy); color:var(--amber); padding:2px 8px; border-radius:3px; letter-spacing:0.04em; }
+        .t.arr { background:var(--blue); }
+
+        /* Route cell */
+        .rc .city { font-weight:800; color:var(--navy); }
+        .rc .via { color:#888; font-size:0.65rem; }
+        .rc .arr-icon { color:var(--orange); font-size:0.72rem; margin:0 0.25rem; }
+
+        /* Fare / rating */
+        .fare { font-weight:800; color:#2E7D32; }
+        .op-govt { background:#003580; color:#fff; border-radius:3px; padding:1px 6px; font-size:0.67rem; font-weight:700; }
+        .op-pvt  { background:#7B3F00; color:#FFD700; border-radius:3px; padding:1px 6px; font-size:0.67rem; font-weight:700; }
+        .op-train { background:#881600; color:#fff; border-radius:3px; padding:1px 6px; font-size:0.67rem; font-weight:700; }
+        .op-flight { background:#01579B; color:#fff; border-radius:3px; padding:1px 6px; font-size:0.67rem; font-weight:700; }
+        .status-ok  { background:#E8F5E9; color:#2E7D32; border:1px solid #A5D6A7; border-radius:4px; padding:1px 7px; font-size:0.68rem; font-weight:700; }
+        .status-dl  { background:#FFF3E0; color:#E65100; border:1px solid #FFCC80; border-radius:4px; padding:1px 7px; font-size:0.68rem; font-weight:700; }
+        .status-ot  { background:#F3F4F6; color:#6B7280; border:1px solid #D1D5DB; border-radius:4px; padding:1px 7px; font-size:0.68rem; font-weight:700; }
+
+        /* Empty board */
+        .empty-board { background:#111827; border-radius:0 0 6px 6px; text-align:center; padding:2.5rem 1rem; color:rgba(255,255,255,0.35); font-size:0.82rem; }
+        .empty-board i { font-size:2.2rem; display:block; margin-bottom:0.5rem; }
+        .empty-board a { color:var(--amber); }
+
+        /* ── Road modes (Car / Bike) ── */
+        .road-cards { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+        @media(max-width:500px){ .road-cards { grid-template-columns:1fr; } }
+        .road-card {
+            background:#fff;
+            border-radius:10px;
+            overflow:hidden;
+            box-shadow:0 2px 8px rgba(0,0,0,0.07);
+        }
+        .road-card-header {
+            padding:0.75rem 1rem;
+            display:flex; align-items:center; gap:0.6rem;
+            font-weight:800; font-size:0.95rem;
+        }
+        .road-card-header .rc-icon { font-size:1.8rem; }
+        .road-card-body { padding:0.75rem 1rem 1rem; }
+        .road-stat { display:flex; align-items:baseline; gap:0.3rem; margin-bottom:0.35rem; }
+        .road-stat .rs-val { font-size:2rem; font-weight:800; line-height:1; }
+        .road-stat .rs-unit { font-size:0.78rem; color:#6c757d; }
+        .road-sub { font-size:0.75rem; color:#6c757d; margin-bottom:0.5rem; }
+        .road-detail-row { display:flex; justify-content:space-between; font-size:0.76rem; color:#444; padding:0.3rem 0; border-top:1px dashed #e0e4ec; }
+        .road-detail-row .label { color:#888; }
+        .road-detail-row .value { font-weight:700; color:var(--navy); }
+
+        /* No road info */
+        .road-na { background:#fff; border-radius:6px 6px 6px 6px; text-align:center; padding:2rem 1rem; color:#aaa; font-size:0.82rem; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+
+        /* Book strip */
+        .book-strip { background:#fff; border-radius:6px; padding:0.85rem 1rem; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem; }
+
+        footer { background:#0a1628; color:rgba(255,255,255,0.5); padding:0.85rem 0; margin-top:auto; font-size:0.72rem; text-align:center; }
+        footer .fb { color:var(--amber); font-weight:700; }
+
+        #google_translate_element { display:none; }
+        .goog-te-banner-frame, #goog-te-banner-frame { display:none !important; }
+        body { top:0 !important; }
+        .skiptranslate { display:none !important; }
+    </style>
+</head>
+<body>
+
+<!-- Ticker -->
+<div class="ticker-bar">
+    <span class="ticker-inner">
+        &nbsp;🚌 Bus &nbsp;🚂 Train &nbsp;✈️ Flight &nbsp;🚗 Car &nbsp;🏍️ Bike – All travel options in one place &nbsp;|&nbsp;
+        Yatra Saarthi – Smart Transport Portal &nbsp;|&nbsp; Enter origin &amp; destination to compare all modes &nbsp;&nbsp;
+    </span>
+</div>
+
+<!-- Navbar -->
+<nav class="main-nav">
+    <a class="nav-brand" href="{{ url_for('passengers_home') }}">
+        <div class="bus-pill"><i class="bi bi-bus-front-fill"></i> Yatra</div>
+        <span class="site-name">Saarthi</span>
+    </a>
+    <div class="nav-links">
+        <a href="{{ url_for('passengers_home') }}"><i class="bi bi-house-fill"></i> Home</a>
+        <a href="{{ url_for('passenger_timetables') }}" class="active"><i class="bi bi-clock-history"></i> Travel Options</a>
+        <a href="{{ url_for('weather_page') }}"><i class="bi bi-cloud-sun-fill"></i> Weather</a>
+        <a href="{{ url_for('train_map') }}"><i class="bi bi-train-front-fill"></i> Train Map</a>
+        <a href="{{ url_for('tourism_page') }}"><i class="bi bi-camera-fill"></i> Tourism</a>
+        <a href="{{ url_for('passengers_plan') }}"><i class="bi bi-compass-fill"></i> Plan Trip</a>
+        <div class="lang-btns">
+            <button id="lang-en" onclick="switchLang('en')" class="active">EN</button>
+            <button id="lang-ta" onclick="switchLang('ta')">தமிழ்</button>
+            <button id="lang-te" onclick="switchLang('te')">తెలుగు</button>
+        </div>
+    </div>
+</nav>
+<div id="google_translate_element"></div>
+
+<!-- Page header -->
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <h2><i class="bi bi-signpost-split-fill me-2" style="color:var(--amber);"></i>All Travel Options</h2>
+                <p>Compare Bus · Train · Flight · Car · Bike for your journey</p>
+            </div>
+            <span id="liveClock" style="font-family:'Courier New',monospace;font-size:1.4rem;color:var(--amber);font-weight:800;letter-spacing:0.1em;"></span>
+        </div>
+    </div>
+</div>
+
+<!-- Search -->
+<div class="search-panel">
+    <div class="container">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label><i class="bi bi-geo-alt-fill" style="color:var(--orange);"></i> From</label>
+                <input type="text" class="form-control" name="origin" value="{{ origin }}"
+                       placeholder="e.g. Madurai" list="citiesList" autocomplete="off">
+            </div>
+            <div class="col-md-4">
+                <label><i class="bi bi-geo-alt" style="color:#2E7D32;"></i> To</label>
+                <input type="text" class="form-control" name="destination" value="{{ destination }}"
+                       placeholder="e.g. Chennai" list="citiesList" autocomplete="off">
+            </div>
+            <div class="col-md-4 d-flex gap-2 align-items-end">
+                <button type="submit" class="btn-search flex-grow-1">
+                    <i class="bi bi-search me-1"></i> Find All Options
+                </button>
+                {% if origin or destination %}
+                <a href="{{ url_for('passenger_timetables') }}" class="btn-clear"><i class="bi bi-x-circle"></i> Clear</a>
+                {% endif %}
+            </div>
+        </form>
+        <datalist id="citiesList">
+            {% for city in all_cities %}<option value="{{ city }}">{% endfor %}
+        </datalist>
+    </div>
+</div>
+
+<div class="container flex-grow-1 pb-4">
+
+    {% if origin and destination %}
+    <!-- ── Mode summary chips ── -->
+    <div class="mode-strip">
+        <a href="#sec-govt" class="mode-chip active">
+            <span class="chip-icon">🚌</span>
+            <span>Govt Bus<span class="chip-count">{{ local_buses|length }} found</span></span>
+        </a>
+        <a href="#sec-pvt" class="mode-chip">
+            <span class="chip-icon">🚌</span>
+            <span>Private Bus<span class="chip-count">{{ private_buses|length }} found</span></span>
+        </a>
+        <a href="#sec-train" class="mode-chip">
+            <span class="chip-icon">🚂</span>
+            <span>Train<span class="chip-count">{{ trains|length }} found</span></span>
+        </a>
+        <a href="#sec-flight" class="mode-chip">
+            <span class="chip-icon">✈️</span>
+            <span>Flight<span class="chip-count">{{ flights|length }} found</span></span>
+        </a>
+        <a href="#sec-car" class="mode-chip">
+            <span class="chip-icon">🚗</span>
+            <span>By Car<span class="chip-count">{% if road_info %}~{{ road_info.car_hours }}h {{ road_info.car_mins }}m{% else %}—{% endif %}</span></span>
+        </a>
+        <a href="#sec-bike" class="mode-chip">
+            <span class="chip-icon">🏍️</span>
+            <span>By Bike<span class="chip-count">{% if road_info %}~{{ road_info.bike_hours }}h {{ road_info.bike_mins }}m{% else %}—{% endif %}</span></span>
+        </a>
+    </div>
+
+    <!-- Result summary banner -->
+    <div class="alert mb-3 py-2" style="background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:0.8rem;">
+        <i class="bi bi-signpost-split-fill me-2" style="color:var(--amber);"></i>
+        Showing all travel options from <strong>{{ origin }}</strong> to <strong>{{ destination }}</strong>
+        &nbsp;—&nbsp;
+        <strong style="color:var(--amber);">{{ local_buses|length + private_buses|length + trains|length + flights|length }}</strong> scheduled services found
+        {% if road_info %}&nbsp;+&nbsp; road travel estimates{% endif %}
+    </div>
+    {% endif %}
+
+    <!-- ════════════ GOVT BUS ════════════ -->
+    <div id="sec-govt">
+        <div class="sec-header">
+            <span>🚌 &nbsp;Government Buses &nbsp;<small style="color:rgba(255,200,0,0.55);font-weight:400;">(TNSTC · SETC · MTC)</small></span>
+            <span class="cnt">{{ local_buses|length }}</span>
+        </div>
+        {% if local_buses %}
+        <div class="dep-table">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr>
+                        <th>Bus No.</th><th>Operator</th><th>Route</th>
+                        <th>Departs</th><th>Arrives</th><th>Duration</th>
+                        <th>Type</th><th>Fare</th><th>Status</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for b in local_buses %}
+                    <tr>
+                        <td><strong>{{ b.bus_number }}</strong></td>
+                        <td><span class="op-govt">{{ b.operator }}</span></td>
+                        <td><div class="rc">
+                            <span class="city">{{ b.origin }}</span>
+                            <span class="arr-icon">→</span>
+                            <span class="city">{{ b.destination }}</span>
+                            {% if b.via_stops %}<div class="via">via {{ (b.via_stops or [])|join(', ') }}</div>{% endif %}
+                        </div></td>
+                        <td><span class="t">{{ b.departure_time.strftime('%H:%M') if b.departure_time else '--:--' }}</span></td>
+                        <td><span class="t arr">{{ b.arrival_time.strftime('%H:%M') if b.arrival_time else '--:--' }}</span></td>
+                        <td style="font-size:0.75rem;">
+                            {% if b.departure_time and b.arrival_time %}
+                                {% set d = ((b.arrival_time.hour*60+b.arrival_time.minute)-(b.departure_time.hour*60+b.departure_time.minute)) %}
+                                {% if d < 0 %}{% set d = d+1440 %}{% endif %}
+                                {{ d//60 }}h {{ d%60 }}m
+                            {% else %}–{% endif %}
+                        </td>
+                        <td><small>{{ b.bus_type or 'Ordinary' }}</small></td>
+                        <td><span class="fare">₹{{ b.fare }}</span></td>
+                        <td>{% if b.status=='running' %}<span class="status-ok">On Time</span>{% elif b.status=='delayed' %}<span class="status-dl">Delayed</span>{% else %}<span class="status-ot">{{ b.status|title }}</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-board">
+            <i class="bi bi-bus-front"></i>
+            {% if origin and destination %}No government buses found for this route.{% else %}Enter origin &amp; destination to search.{% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ════════════ PRIVATE BUS ════════════ -->
+    <div id="sec-pvt">
+        <div class="sec-header">
+            <span>🚌 &nbsp;Private Bus Operators &nbsp;<small style="color:rgba(255,200,0,0.55);font-weight:400;">(Long distance · AC / Sleeper)</small></span>
+            <span class="cnt">{{ private_buses|length }}</span>
+        </div>
+        {% if private_buses %}
+        <div class="dep-table">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr>
+                        <th>Bus No.</th><th>Operator</th><th>Route</th>
+                        <th>Departs</th><th>Arrives</th><th>Duration</th>
+                        <th>Type</th><th>Fare</th><th>Rating</th><th>Status</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for b in private_buses %}
+                    <tr>
+                        <td><strong>{{ b.bus_number }}</strong></td>
+                        <td><span class="op-pvt">{{ b.operator_name }}</span></td>
+                        <td><div class="rc">
+                            <span class="city">{{ b.origin }}</span><span class="arr-icon">→</span><span class="city">{{ b.destination }}</span>
+                            {% if b.via_stops %}<div class="via">via {{ (b.via_stops or [])|join(', ') }}</div>{% endif %}
+                        </div></td>
+                        <td><span class="t">{{ b.departure_time.strftime('%H:%M') if b.departure_time else '--:--' }}</span></td>
+                        <td><span class="t arr">{{ b.arrival_time.strftime('%H:%M') if b.arrival_time else '--:--' }}</span></td>
+                        <td style="font-size:0.75rem;">
+                            {% if b.duration %}{{ b.duration }}{% elif b.departure_time and b.arrival_time %}
+                                {% set d = ((b.arrival_time.hour*60+b.arrival_time.minute)-(b.departure_time.hour*60+b.departure_time.minute)) %}
+                                {% if d<0 %}{% set d=d+1440 %}{% endif %}{{ d//60 }}h {{ d%60 }}m
+                            {% else %}–{% endif %}
+                        </td>
+                        <td><small>{{ b.bus_type }}</small></td>
+                        <td><span class="fare">₹{{ b.fare }}</span></td>
+                        <td>{% if b.rating>0 %}<span style="color:#F59E0B;font-weight:700;">★ {{ b.rating }}</span>{% else %}–{% endif %}</td>
+                        <td>{% if b.status=='available' %}<span class="status-ok">Available</span>{% elif b.status=='delayed' %}<span class="status-dl">Delayed</span>{% else %}<span class="status-ot">{{ b.status|title }}</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-board">
+            <i class="bi bi-bus-front-fill"></i>
+            {% if origin and destination %}No private buses found for this route.{% else %}Enter origin &amp; destination to search.{% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ════════════ TRAIN ════════════ -->
+    <div id="sec-train">
+        <div class="sec-header" style="background:#881600;">
+            <span>🚂 &nbsp;Train Services &nbsp;<small style="color:rgba(255,200,0,0.55);font-weight:400;">(Live via IRCTC / erail.in)</small></span>
+            <div class="d-flex align-items-center gap-2">
+                {% if origin and destination %}
+                <input type="date" id="trainDatePicker" class="form-control form-control-sm"
+                    style="font-size:0.72rem;padding:2px 6px;max-width:130px;background:#fff;border:none;border-radius:8px;"
+                    value="{{ today_date }}">
+                <button id="btnLiveTrains" onclick="loadLiveTrains()" class="btn btn-sm"
+                    style="background:#FFA000;color:#000;font-weight:700;font-size:0.72rem;padding:2px 10px;border:none;border-radius:10px;">
+                    🔄 Refresh
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Station info bar -->
+        {% if origin and destination %}
+        <div id="trainStationBar" style="display:none;background:#FFEBEE;border-left:4px solid #881600;padding:0.6rem 1rem;font-size:0.78rem;color:#881600;"></div>
+        {% endif %}
+
+        <!-- Nearby stations for origin + destination (shown only when no direct station) -->
+        {% if origin and destination %}
+        <div id="nearbyTrainAlerts" style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+            <div id="nearbyStationOrigin"></div>
+            <div id="nearbyStationDest"></div>
+        </div>
+        {% endif %}
+
+        <!-- Live IRCTC result — all trains fetched from erail.in API -->
+        <div id="liveTrainsResult">
+            {% if not origin or not destination %}
+            <div class="empty-board" style="background:#1A0A0A;">
+                <i class="bi bi-train-front" style="color:#ff6b6b;font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                Enter origin &amp; destination above to fetch live train schedules from IRCTC.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ════════════ FLIGHT ════════════ -->
+    <div id="sec-flight" style="margin-top:1.5rem;">
+        <div class="sec-header" style="background:#01579B;">
+            <span>✈️ &nbsp;Flights &nbsp;<small style="color:rgba(255,200,0,0.55);font-weight:400;">(Air services)</small></span>
+            <div class="d-flex align-items-center gap-2">
+                {% if origin and destination %}
+                <button id="btnLiveFlights" onclick="loadLiveFlights()" class="btn btn-sm" style="background:#FFA000;color:#000;font-weight:700;font-size:0.72rem;padding:2px 10px;border:none;border-radius:10px;">
+                    <span id="liveFlightsBtnText">⚡ Load Live Data</span>
+                </button>
+                {% endif %}
+                <span class="cnt">{{ flights|length }}</span>
+            </div>
+        </div>
+
+        <!-- Airport info bar -->
+        {% if origin and destination %}
+        <div id="airportInfoBar" style="display:none;background:#E3F2FD;border-left:4px solid #01579B;padding:0.6rem 1rem;font-size:0.78rem;color:#01579B;"></div>
+        {% endif %}
+
+        <!-- Nearby airports for origin + destination -->
+        {% if origin and destination %}
+        <div id="nearbyFlightAlerts" style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+            <div id="nearbyAirportOrigin"></div>
+            <div id="nearbyAirportDest"></div>
+        </div>
+        {% endif %}
+
+        <!-- Live flights result (injected by JS) -->
+        <div id="liveFlightsResult"></div>
+
+        <!-- DB flights (static) -->
+        {% if flights %}
+        <div class="dep-table">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead style="background:#01579B;"><tr>
+                        <th>Flight No.</th><th>Airline</th><th>From Airport</th><th>To Airport</th>
+                        <th>Departs</th><th>Arrives</th><th>Days</th>
+                    </tr></thead>
+                    <tbody>
+                    {% for f in flights %}
+                    <tr>
+                        <td><span class="op-flight">{{ f.flight_number }}</span></td>
+                        <td><strong>{{ f.airline }}</strong></td>
+                        <td>{{ f.origin_airport }}</td>
+                        <td>{{ f.destination_airport }}</td>
+                        <td><span class="t" style="background:#01579B;">{{ f.departure_time.strftime('%H:%M') if f.departure_time else '--:--' }}</span></td>
+                        <td><span class="t" style="background:#013F6E;">{{ f.arrival_time.strftime('%H:%M') if f.arrival_time else '--:--' }}</span></td>
+                        <td><small>{{ f.days_of_operation or 'Daily' }}</small></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-board" style="background:#021B2F;" id="flightEmptyState">
+            <i class="bi bi-airplane" style="color:#64B5F6;"></i>
+            {% if origin and destination %}
+            No scheduled flights in database. Click <strong style="color:var(--amber);">⚡ Load Live Data</strong> above for real-time flights.
+            {% else %}Enter origin &amp; destination to search.{% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ════════════ NEARBY AIRPORTS ════════════ -->
+    <div id="sec-airports" style="margin-top:1.5rem;">
+        <div class="sec-header" style="background:#1565C0;">
+            <span>🛫 &nbsp;Nearby Airports
+                <small style="color:rgba(255,200,0,0.55);font-weight:400;">
+                    {% if origin %} near {{ origin }}{% endif %}
+                </small>
+            </span>
+            <div class="d-flex align-items-center gap-2">
+                <button onclick="detectNearbyAirports()" class="btn btn-sm" style="background:#FFA000;color:#000;font-weight:700;font-size:0.72rem;padding:2px 10px;border:none;border-radius:10px;">
+                    📍 Use My Location
+                </button>
+                <span id="nearbyAirportsCnt" class="cnt" style="background:#1565C0;border:1px solid rgba(255,255,255,0.3);">—</span>
+            </div>
+        </div>
+        <div id="nearbyAirportsResult" style="background:#fff;border-radius:0 0 6px 6px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:1.5rem;">
+            <div style="text-align:center;padding:1.5rem;color:#aaa;font-size:0.82rem;">
+                <i class="bi bi-geo-alt" style="font-size:2rem;display:block;margin-bottom:0.5rem;color:#1565C0;"></i>
+                <div>Click <strong>📍 Use My Location</strong> to find airports within 80 km of you,<br>
+                or search a city above to see nearby airports automatically.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════ CAR & BIKE ════════════ -->
+    <div style="margin-top:1.5rem;" id="sec-car">
+        <div class="sec-header" style="background:#2E7D32;">
+            <span>🚗 &nbsp;By Road &nbsp;<small style="color:rgba(255,200,0,0.55);font-weight:400;">(Car &amp; Bike estimated travel times)</small></span>
+        </div>
+        {% if road_info %}
+        <div style="background:#fff;border-radius:0 0 6px 6px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:1.5rem;">
+            <!-- Distance banner -->
+            <div class="text-center mb-3 py-2" style="background:#F1F8E9;border-radius:6px;">
+                <span style="font-size:1.4rem;font-weight:800;color:#2E7D32;">{{ road_info.distance_km }} km</span>
+                <span style="font-size:0.8rem;color:#666;margin-left:0.5rem;">approximate road distance</span>
+                <span style="color:#aaa;margin:0 0.75rem;">|</span>
+                <span style="font-size:0.8rem;color:#888;">{{ origin }} → {{ destination }}</span>
+            </div>
+            <div class="road-cards" id="sec-bike">
+                <!-- Car -->
+                <div class="road-card">
+                    <div class="road-card-header" style="background:#E8F5E9;color:#1B5E20;">
+                        <span class="rc-icon">🚗</span>
+                        <div>
+                            <div>By Car</div>
+                            <div style="font-size:0.68rem;font-weight:400;color:#4CAF50;">Avg speed 60 km/h</div>
+                        </div>
+                    </div>
+                    <div class="road-card-body">
+                        <div class="road-stat">
+                            <span class="rs-val" style="color:#2E7D32;">{{ road_info.car_hours }}</span>
+                            <span class="rs-unit">hr</span>
+                            <span class="rs-val" style="color:#2E7D32;font-size:1.4rem;">{{ road_info.car_mins }}</span>
+                            <span class="rs-unit">min</span>
+                        </div>
+                        <div class="road-sub">Estimated journey time</div>
+                        <div class="road-detail-row">
+                            <span class="label">Distance</span>
+                            <span class="value">{{ road_info.distance_km }} km</span>
+                        </div>
+                        <div class="road-detail-row">
+                            <span class="label">Est. Fuel (petrol)</span>
+                            <span class="value">~₹{{ road_info.car_fuel_cost }}</span>
+                        </div>
+                        <div class="road-detail-row">
+                            <span class="label">Fuel needed</span>
+                            <span class="value">~{{ (road_info.distance_km / 15)|round(1) }} L</span>
+                        </div>
+                        <div class="road-detail-row">
+                            <span class="label">Via (suggested)</span>
+                            <span class="value">National Highway</span>
+                        </div>
+                        <a href="https://www.google.com/maps/dir/{{ origin }}/{{ destination }}" target="_blank"
+                           class="btn btn-success btn-sm w-100 mt-2" style="font-size:0.75rem;font-weight:700;">
+                            <i class="bi bi-map-fill me-1"></i> Open in Google Maps
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Bike -->
+                <div class="road-card">
+                    <div class="road-card-header" style="background:#FFF8E1;color:#E65100;">
+                        <span class="rc-icon">🏍️</span>
+                        <div>
+                            <div>By Bike</div>
+                            <div style="font-size:0.68rem;font-weight:400;color:#FFA000;">Avg speed 40 km/h</div>
+                        </div>
+                    </div>
+                    <div class="road-card-body">
+                        <div class="road-stat">
+                            <span class="rs-val" style="color:var(--orange);">{{ road_info.bike_hours }}</span>
+                            <span class="rs-unit">hr</span>
+                            <span class="rs-val" style="color:var(--orange);font-size:1.4rem;">{{ road_info.bike_mins }}</span>
+                            <span class="rs-unit">min</span>
+                        </div>
+                        <div class="road-sub">Estimated journey time</div>
+                        <div class="road-detail-row">
+                            <span class="label">Distance</span>
+                            <span class="value">{{ road_info.distance_km }} km</span>
+                        </div>
+                        <div class="road-detail-row">
+                            <span class="label">Est. Fuel (petrol)</span>
+                            <span class="value">~₹{{ road_info.bike_fuel_cost }}</span>
+                        </div>
+                        <div class="road-detail-row">
+                            <span class="label">Fuel needed</span>
+                            <span class="value">~{{ (road_info.distance_km / 45)|round(1) }} L</span>
+                        </div>
+                        <div class="road-detail-row">
+                            <span class="label">Best for</span>
+                            <span class="value">{% if road_info.distance_km <= 150 %}Short trips{% else %}Experienced riders only{% endif %}</span>
+                        </div>
+                        <a href="https://www.google.com/maps/dir/{{ origin }}/{{ destination }}" target="_blank"
+                           class="btn btn-warning btn-sm w-100 mt-2 text-dark" style="font-size:0.75rem;font-weight:700;">
+                            <i class="bi bi-map-fill me-1"></i> Open in Google Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="road-na">
+            <i class="bi bi-car-front" style="font-size:2rem;display:block;margin-bottom:0.5rem;color:#aaa;"></i>
+            {% if origin and destination %}
+            Road distance not available for this route in our database.
+            <br><a href="https://www.google.com/maps/dir/{{ origin }}/{{ destination }}" target="_blank" style="color:var(--orange);">Check on Google Maps →</a>
+            {% else %}
+            Enter origin &amp; destination to see car and bike travel estimates.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ════════════ Book Online ════════════ -->
+    <div class="book-strip">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi bi-box-arrow-up-right" style="color:var(--orange);"></i>
+            <strong style="font-size:0.85rem;color:var(--navy);">Book Online</strong>
+        </div>
+        <div class="row g-2">
+            <div class="col-6 col-md-3">
+                <a href="https://www.redbus.in/{% if origin and destination %}bus-tickets/{{ origin|lower|replace(' ','-') }}-to-{{ destination|lower|replace(' ','-') }}-bus-tickets{% endif %}"
+                   target="_blank" class="btn btn-danger btn-sm w-100 fw-bold">🚌 RedBus</a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="https://www.abhibus.com/" target="_blank" class="btn btn-warning btn-sm w-100 fw-bold text-dark">🚌 AbhiBus</a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="https://www.irctc.co.in/nget/train-search" target="_blank" class="btn btn-dark btn-sm w-100 fw-bold">🚂 IRCTC Trains</a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="https://www.makemytrip.com/flights/" target="_blank" class="btn btn-info btn-sm w-100 fw-bold text-white">✈️ MMT Flights</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <span class="fb">Yatra Saarthi</span> &nbsp;|&nbsp;
+    Designed by <strong style="color:var(--amber);">Nextlinkers</strong> | Design Build Operate | KARE
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+    /* Live flights panel */
+    .live-flight-card { background:#E3F2FD; border-radius:8px; padding:0.75rem 1rem; margin-bottom:0.6rem; border-left:4px solid #01579B; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+    .live-flight-card .lf-num { font-family:'Courier New',monospace; font-weight:800; font-size:0.95rem; color:#01579B; min-width:90px; }
+    .live-flight-card .lf-airline { font-size:0.8rem; font-weight:700; color:#333; flex:1; }
+    .live-flight-card .lf-times { display:flex; gap:0.75rem; align-items:center; }
+    .live-flight-card .lf-t { font-family:'Courier New',monospace; font-weight:800; font-size:0.88rem; }
+    .lf-dep { color:#01579B; } .lf-arr { color:#004D90; }
+    .lf-arrow { color:#FFA000; }
+    .lf-status-ok { background:#E8F5E9; color:#2E7D32; border-radius:4px; padding:1px 8px; font-size:0.7rem; font-weight:700; }
+    .lf-status-dl { background:#FFF3E0; color:#E65100; border-radius:4px; padding:1px 8px; font-size:0.7rem; font-weight:700; }
+    .lf-status-ot { background:#EEE; color:#555; border-radius:4px; padding:1px 8px; font-size:0.7rem; font-weight:700; }
+    .lf-delay { color:#E65100; font-size:0.7rem; font-weight:700; }
+
+    /* Airport cards */
+    .airport-card { background:#F8FBFF; border:1px solid #BBDEFB; border-radius:8px; padding:0.75rem 1rem; margin-bottom:0.6rem; display:flex; align-items:center; gap:1rem; }
+    .airport-card .ap-code { font-family:'Courier New',monospace; font-weight:800; font-size:1.1rem; color:#1565C0; background:#E3F2FD; border-radius:6px; padding:0.25rem 0.6rem; min-width:56px; text-align:center; flex-shrink:0; }
+    .airport-card .ap-info { flex:1; }
+    .airport-card .ap-name { font-weight:700; color:#0D1B2A; font-size:0.85rem; }
+    .airport-card .ap-city { color:#666; font-size:0.73rem; }
+    .airport-card .ap-dist { font-size:0.8rem; font-weight:700; color:#1565C0; text-align:right; white-space:nowrap; }
+    .airport-card .ap-btn { font-size:0.72rem; font-weight:700; }
+
+    /* Spinner */
+    .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:4px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* Setup guide */
+    .api-setup-box { background:#FFF8E1; border:1px solid #FFD54F; border-radius:8px; padding:1rem; }
+    .api-setup-box code { background:#fff3cd; padding:2px 6px; border-radius:3px; font-size:0.8rem; }
+</style>
+
+<script>
+/* ── Clock ── */
+function updateClock() {
+    const n = new Date(), el = document.getElementById('liveClock');
+    if(el) el.textContent = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
+}
+setInterval(updateClock,1000); updateClock();
+
+/* ── Mode chips ── */
+document.querySelectorAll('.mode-chip').forEach(chip=>{
+    chip.addEventListener('click',function(){ document.querySelectorAll('.mode-chip').forEach(c=>c.classList.remove('active')); this.classList.add('active'); });
+});
+
+/* ── Language ── */
+function googleTranslateInit(){ new google.translate.TranslateElement({pageLanguage:'en',includedLanguages:'ta,te,hi,kn,ml,en',autoDisplay:false},'google_translate_element'); }
+function switchLang(lang){
+    document.querySelectorAll('.lang-btns button').forEach(b=>b.classList.remove('active'));
+    const btn=document.getElementById('lang-'+lang); if(btn) btn.classList.add('active');
+    const sel=document.querySelector('.goog-te-combo');
+    if(sel){sel.value=lang;sel.dispatchEvent(new Event('change'));}
+    else{document.cookie='googtrans=/en/'+lang+'; path=/';if(lang!=='en')location.reload();}
+    localStorage.setItem('preferredLang',lang);
+}
+document.addEventListener('DOMContentLoaded',()=>{const s=localStorage.getItem('preferredLang');if(s&&s!=='en')setTimeout(()=>switchLang(s),800);});
+
+/* ════════════════════════════════════════════
+   NEARBY AIRPORT / STATION PANELS
+   — Always shown when a route is searched —
+════════════════════════════════════════════ */
+
+function loadNearbyAirportsPanel(cityName, boxId, usedCode){
+    const box = document.getElementById(boxId);
+    if(!box || !cityName) return;
+    box.innerHTML = `<div style="padding:0.5rem 1rem;font-size:0.75rem;color:#888;">🔍 Looking for airports within 80 km of <em>${cityName}</em>…</div>`;
+
+    fetch(`/api/nearby-airports?city=${encodeURIComponent(cityName)}&radius=80`)
+    .then(r=>r.json())
+    .then(data=>{
+        if(!data.airports || !data.airports.length){
+            box.innerHTML = `<div style="padding:0.6rem 1rem;font-size:0.78rem;background:#FFF3E0;border-left:4px solid #FF8F00;">
+                ⚠️ No airports found within 80 km of <strong>${cityName}</strong>.
+            </div>`;
+            return;
+        }
+        const isNearest = !data.airports.some(a => a.code === usedCode);
+        let html = `<div style="background:${isNearest?'#FFF3E0':'#E3F2FD'};border-left:4px solid ${isNearest?'#FF8F00':'#01579B'};padding:0.6rem 1rem;font-size:0.8rem;">`;
+        if(isNearest){
+            html += `<div class="fw-bold mb-2" style="color:#E65100;">⚠️ No direct airport in <strong>${cityName}</strong> — nearest options within 80 km:</div>`;
+        } else {
+            html += `<div class="fw-bold mb-2" style="color:#01579B;">✈️ Airports within 80 km of <strong>${cityName}</strong>:</div>`;
+        }
+        html += `<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">`;
+        data.airports.forEach(ap=>{
+            const isUsed = ap.code === usedCode;
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ap.name+', '+ap.city)}`;
+            html += `<div style="${isUsed?'background:#01579B;color:#fff;':'background:#fff;color:#333;border:1px solid #BBDEFB;'}
+                border-radius:8px;padding:4px 12px;font-size:0.75rem;display:inline-flex;align-items:center;gap:6px;">
+                <span style="font-family:monospace;font-weight:800;font-size:0.85rem;">${ap.code}</span>
+                <span>${ap.name}</span>
+                <span style="opacity:0.7;">· ${ap.distance_km} km</span>
+                <a href="${mapsUrl}" target="_blank" style="color:${isUsed?'#90CAF9':'#01579B'};font-size:0.65rem;">📍</a>
+            </div>`;
+        });
+        html += `</div></div>`;
+        box.innerHTML = html;
+    })
+    .catch(()=>{ box.innerHTML=''; });
+}
+
+function loadNearbyStationsPanel(cityName, boxId, usedCode){
+    const box = document.getElementById(boxId);
+    if(!box || !cityName) return;
+    const isOriginBox = boxId === 'nearbyStationOrigin';
+    box.innerHTML = `<div style="padding:0.5rem 1rem;font-size:0.75rem;color:#888;">🔍 Finding stations near <em>${cityName}</em>…</div>`;
+
+    fetch(`/api/nearby-stations?city=${encodeURIComponent(cityName)}&radius=150`)
+    .then(r=>r.json())
+    .then(data=>{
+        if(!data.stations || !data.stations.length){
+            box.innerHTML = `<div style="padding:0.6rem 1rem;font-size:0.78rem;background:#FFF8E1;border-left:4px solid #F9A825;">
+                ⚠️ No stations found within 150 km of <strong>${cityName}</strong>.
+            </div>`;
+            return;
+        }
+
+        const hasDirectStation = data.stations.some(s => s.code === usedCode);
+        const borderColor = hasDirectStation ? '#881600' : '#F9A825';
+        const bgColor     = hasDirectStation ? '#FFEBEE' : '#FFF8E1';
+
+        let html = `<div style="background:${bgColor};border-left:4px solid ${borderColor};padding:0.75rem 1rem;font-size:0.8rem;">`;
+
+        if(!hasDirectStation){
+            const nearest = data.stations[0];
+            html += `<div class="fw-bold mb-1" style="color:#E65100;">
+                ⚠️ No direct station in <strong>${cityName}</strong> — nearest: 
+                <strong>${nearest.code}</strong> ${nearest.name} (${nearest.distance_km} km)
+            </div>
+            <div style="font-size:0.73rem;color:#888;margin-bottom:0.5rem;">
+                Showing trains from <strong>${nearest.code}</strong>. You can also pick another station below:
+            </div>`;
+        } else {
+            html += `<div class="fw-bold mb-2" style="color:#881600;">🚂 Stations near <strong>${cityName}</strong>:</div>`;
+        }
+
+        html += `<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">`;
+        data.stations.forEach(st => {
+            const isUsed = st.code === usedCode || (!usedCode && st === data.stations[0]);
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(st.name+' railway station')}`;
+            const role = isOriginBox ? 'origin' : 'dest';
+
+            html += `<div style="${isUsed ? 'background:#881600;color:#fff;' : 'background:#fff;color:#333;border:1px solid #FFCDD2;'}
+                border-radius:8px;padding:5px 10px;font-size:0.75rem;display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap;">
+                <span style="font-family:monospace;font-weight:800;">${st.code}</span>
+                <span>${st.name}</span>
+                <span style="opacity:0.7;white-space:nowrap;">· ${st.distance_km} km</span>
+                ${!isUsed ? `<button onclick="swapStationAndReload('${st.code}','${st.name}','${role}')"
+                    style="background:#881600;color:#fff;border:none;border-radius:5px;padding:1px 7px;font-size:0.65rem;cursor:pointer;white-space:nowrap;">
+                    🚂 Trains
+                </button>` : `<span style="font-size:0.65rem;opacity:0.8;">✓ active</span>`}
+                <a href="${mapsUrl}" target="_blank" style="color:${isUsed?'#FFCDD2':'#881600'};font-size:0.65rem;">📍</a>
+            </div>`;
+        });
+        html += `</div></div>`;
+        box.innerHTML = html;
+    })
+    .catch(()=>{ box.innerHTML=''; });
+}
+
+/* Called when user clicks "🚂 Trains" on an alternate nearby station */
+function swapStationAndReload(stationCode, stationName, role){
+    const origin      = "{{ origin }}";
+    const destination = "{{ destination }}";
+    const datePicker  = document.getElementById('trainDatePicker');
+    const date        = datePicker ? datePicker.value : '';
+
+    const resultDiv  = document.getElementById('liveTrainsResult');
+    const stationBar = document.getElementById('trainStationBar');
+    const btn        = document.getElementById('btnLiveTrains');
+
+    resultDiv.innerHTML = `<div style="background:#FFEBEE;padding:1rem 1.2rem;text-align:center;font-size:0.82rem;color:#881600;">
+        <span class="spinner" style="border-color:rgba(136,22,0,0.2);border-top-color:#881600;width:18px;height:18px;"></span>
+        &nbsp; Fetching trains from <strong>${stationCode} — ${stationName}</strong>…
+        <br><small style="color:#aaa;">This may take up to 20 seconds</small>
+    </div>`;
+    if(btn){ btn.innerHTML='<span class="spinner"></span> Loading…'; btn.disabled=true; }
+
+    const fromCode = role === 'origin'      ? stationCode : null;
+    const toCode   = role === 'dest'        ? stationCode : null;
+    const fromCity = role === 'origin'      ? stationCode : origin;
+    const toCity   = role === 'dest'        ? stationCode : destination;
+
+    let url = `/api/live-trains?origin=${encodeURIComponent(fromCity)}&destination=${encodeURIComponent(toCity)}`;
+    if(date) url += `&date=${date}`;
+
+    fetch(url)
+    .then(r=>r.json())
+    .then(data=>{
+        if(btn){ btn.disabled=false; btn.innerHTML='✅ Live'; }
+        if(stationBar && data.from_code && data.to_code){
+            stationBar.innerHTML = `🚂 &nbsp;<strong>${data.from_code}</strong> ${data.from_name||''} &nbsp;→&nbsp; <strong>${data.to_code}</strong> ${data.to_name||''}`;
+            stationBar.style.display='block';
+        }
+        renderTrainResults(data, resultDiv, origin, destination);
+    })
+    .catch(err=>{
+        if(btn){ btn.innerHTML='⚡ Retry'; btn.disabled=false; }
+        resultDiv.innerHTML=`<div class="alert alert-danger m-2">❌ ${err.message}</div>`;
+    });
+}
+
+/* Shared function to render train results table */
+function renderTrainResults(data, resultDiv, origin, destination){
+    const emptyEl = document.getElementById('trainEmptyState');
+    if(emptyEl) emptyEl.style.display='none';
+
+    if(!data.trains || !data.trains.length){
+        resultDiv.innerHTML=`<div style="background:#1A0A0A;border-radius:0 0 6px 6px;text-align:center;padding:2rem;color:rgba(255,255,255,0.4);font-size:0.82rem;">
+            🚂 &nbsp;No trains found for this route on ${data.date||'today'}.
+            <br><a href="https://www.irctc.co.in/nget/train-search" target="_blank" style="color:#FFA000;">Search on IRCTC →</a>
+        </div>`;
+        return;
+    }
+
+    let html=`<div style="background:#fff;border-radius:0 0 6px 6px;padding:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <div class="fw-bold mb-2" style="font-size:0.75rem;color:#881600;text-transform:uppercase;letter-spacing:0.05em;">
+        ⚡ ${data.count} train(s) found — ${data.date||'today'}
+    </div>
+    <div class="table-responsive">
+    <table class="table table-hover mb-0" style="font-size:0.8rem;">
+    <thead style="background:#881600;color:#fff;"><tr>
+        <th>Train No.</th><th>Train Name</th><th>Type</th><th>Departs</th><th>Arrives</th>
+        <th>Duration</th><th>Classes</th><th>Runs On</th><th>Book</th>
+    </tr></thead><tbody>`;
+
+    data.trains.forEach(t=>{
+        const days    = Array.isArray(t.run_days) ? t.run_days.join(', ') : (t.run_days||'Daily');
+        const classes = Array.isArray(t.classes)  ? t.classes.join(' · ') : (t.classes||'');
+        const ttype   = t.train_type ? `<span style="font-size:0.65rem;background:#FFEBEE;color:#881600;border-radius:3px;padding:1px 5px;">${t.train_type}</span>` : '';
+        html+=`<tr>
+            <td><span class="op-train">${t.number}</span></td>
+            <td><strong>${t.name}</strong>${t.distance?`<br><small style="color:#aaa;">${t.distance} km</small>`:''}</td>
+            <td>${ttype}</td>
+            <td><span class="t" style="background:#881600;">${t.dep_time||'--:--'}</span></td>
+            <td><span class="t" style="background:#5D1010;">${t.arr_time||'--:--'}</span></td>
+            <td style="white-space:nowrap;">${t.duration||'—'}</td>
+            <td style="font-size:0.7rem;color:#333;">${classes}</td>
+            <td style="font-size:0.7rem;">${days}</td>
+            <td><a href="https://www.irctc.co.in/nget/train-search" target="_blank" class="btn btn-danger btn-sm" style="font-size:0.65rem;padding:2px 7px;font-weight:700;">Book</a></td>
+        </tr>`;
+    });
+    html+=`</tbody></table></div></div>`;
+    resultDiv.innerHTML=html;
+}
+
+/* ════════════════════════════════════════════
+   LIVE TRAINS (IRCTC)
+════════════════════════════════════════════ */
+function loadLiveTrains(){
+    const origin      = "{{ origin }}";
+    const destination = "{{ destination }}";
+    const btn         = document.getElementById('btnLiveTrains');
+    const resultDiv   = document.getElementById('liveTrainsResult');
+    const stationBar  = document.getElementById('trainStationBar');
+    const datePicker  = document.getElementById('trainDatePicker');
+
+    if(!origin || !destination) return;
+
+    const date = datePicker ? datePicker.value : '';
+    if(btn){ btn.innerHTML='<span class="spinner"></span> Loading…'; btn.disabled=true; }
+    resultDiv.innerHTML=`<div style="background:#FFEBEE;padding:1rem 1.2rem;text-align:center;font-size:0.82rem;color:#881600;">
+        <span class="spinner" style="border-color:rgba(136,22,0,0.2);border-top-color:#881600;width:18px;height:18px;"></span>
+        &nbsp; Fetching IRCTC trains <strong>${origin}</strong> → <strong>${destination}</strong>…
+        <br><small style="color:#aaa;margin-top:4px;display:block;">This may take up to 30 seconds — please wait</small>
+    </div>`;
+
+    let url = `/api/live-trains?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`;
+    if(date) url += `&date=${date}`;
+
+    fetch(url)
+    .then(r=>r.json())
+    .then(data=>{
+        if(btn){ btn.disabled=false; }
+
+        // Show station info bar only when direct stations are found
+        if(stationBar && data.from_code && data.to_code){
+            const fromLabel = data.from_nearest_used
+                ? `<strong>${data.from_code}</strong> ${data.from_name} <span style="background:#FFF3E0;color:#E65100;border-radius:4px;padding:1px 6px;font-size:0.7rem;">📍 nearest to ${data.origin_city}</span>`
+                : `<strong>${data.from_code}</strong> ${data.from_name}`;
+            const toLabel = data.to_nearest_used
+                ? `<strong>${data.to_code}</strong> ${data.to_name} <span style="background:#FFF3E0;color:#E65100;border-radius:4px;padding:1px 6px;font-size:0.7rem;">📍 nearest to ${data.dest_city}</span>`
+                : `<strong>${data.to_code}</strong> ${data.to_name}`;
+            stationBar.innerHTML = `🚂 &nbsp;${fromLabel} &nbsp;→&nbsp; ${toLabel}`;
+            stationBar.style.display = 'block';
+        }
+
+        // Show nearby stations ONLY if direct station was not found for that city
+        const originStBox = document.getElementById('nearbyStationOrigin');
+        const destStBox   = document.getElementById('nearbyStationDest');
+        if(data.from_nearest_used){
+            loadNearbyStationsPanel(data.origin_city || origin, 'nearbyStationOrigin', data.from_code);
+        } else if(originStBox){
+            originStBox.innerHTML = '';   // direct station found — hide panel
+        }
+        if(data.to_nearest_used){
+            loadNearbyStationsPanel(data.dest_city || destination, 'nearbyStationDest', data.to_code);
+        } else if(destStBox){
+            destStBox.innerHTML = '';     // direct station found — hide panel
+        }
+
+        if(data.status==='no_key'){
+            if(btn) btn.innerHTML='⚡ Live IRCTC';
+            resultDiv.innerHTML=`
+            <div class="api-setup-box m-2" style="background:#FFF3E0;border-color:#FF8F00;">
+                <div class="fw-bold mb-2" style="color:#E65100;">🚂 IRCTC RapidAPI Key Required</div>
+                <p style="font-size:0.8rem;color:#555;margin-bottom:0.75rem;">
+                    Get a <strong>free</strong> IRCTC API key from RapidAPI (100 free calls/month):
+                </p>
+                <ol style="font-size:0.78rem;color:#444;line-height:1.9;">
+                    <li>Visit <a href="https://rapidapi.com/IRCTCAPI/api/irctc1" target="_blank" style="color:#881600;font-weight:700;">rapidapi.com/IRCTCAPI/api/irctc1</a></li>
+                    <li>Click <strong>Subscribe to Test</strong> → choose the <strong>Basic (Free)</strong> plan</li>
+                    <li>Copy your <code>X-RapidAPI-Key</code> from the header section</li>
+                    <li>Set env variable: <code>IRCTC_RAPIDAPI_KEY=your_key</code> and restart app</li>
+                </ol>
+                <a href="https://www.irctc.co.in/nget/train-search" target="_blank" class="btn btn-danger btn-sm mt-2 text-white fw-bold">
+                    🚂 Search on IRCTC.co.in →
+                </a>
+            </div>`;
+            return;
+        }
+
+        if(data.status==='no_station'){
+            if(btn) btn.innerHTML='⚡ Live IRCTC';
+            resultDiv.innerHTML=`<div style="background:#FFF8E1;border-left:4px solid #FFA000;padding:0.75rem 1rem;font-size:0.82rem;color:#555;">
+                ⚠️ ${data.message}
+                <br><a href="https://www.irctc.co.in/nget/train-search" target="_blank" style="color:#881600;font-weight:700;">Search on IRCTC.co.in →</a>
+            </div>`;
+            if(!data.from_code) loadNearbyStationsPanel(origin,       'nearbyStationOrigin', null);
+            if(!data.to_code)   loadNearbyStationsPanel(destination,  'nearbyStationDest',   null);
+            return;
+        }
+
+        if(data.status==='error' || data.status==='api_error'){
+            if(btn) btn.innerHTML='⚡ Retry';
+            resultDiv.innerHTML=`<div class="alert alert-danger m-2" style="font-size:0.8rem;">❌ ${data.message}</div>`;
+            return;
+        }
+
+        if(btn) btn.innerHTML='✅ Live';
+        renderTrainResults(data, resultDiv, origin, destination);
+    })
+    .catch(err=>{
+        if(btn){ btn.innerHTML='⚡ Retry'; btn.disabled=false; }
+        resultDiv.innerHTML=`<div class="alert alert-danger m-2" style="font-size:0.8rem;">❌ Network error: ${err.message}</div>`;
+    });
+}
+
+/* ════════════════════════════════════════════
+   LIVE FLIGHTS
+════════════════════════════════════════════ */
+function fmt(dtStr){
+    if(!dtStr) return '--:--';
+    try{
+        const d = new Date(dtStr);
+        /* The API timestamps include +05:30 offset for Indian airports, so
+           toLocaleTimeString with IST is the safest conversion */
+        return d.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Kolkata'});
+    } catch{ return '--:--'; }
+}
+
+function loadLiveFlights(){
+    const origin      = "{{ origin }}";
+    const destination = "{{ destination }}";
+    const btn       = document.getElementById('btnLiveFlights');
+    const resultDiv = document.getElementById('liveFlightsResult');
+    const infoBar   = document.getElementById('airportInfoBar');
+
+    if(!origin || !destination) return;
+
+    if(btn){ btn.innerHTML = '<span class="spinner"></span> Loading…'; btn.disabled = true; }
+    resultDiv.innerHTML = `<div style="background:#E3F2FD;padding:1rem 1.2rem;text-align:center;font-size:0.82rem;color:#01579B;">
+        <span class="spinner" style="border-color:rgba(1,87,155,0.2);border-top-color:#01579B;width:18px;height:18px;"></span>
+        &nbsp; Fetching live flights from <strong>${origin}</strong> → <strong>${destination}</strong>…
+    </div>`;
+
+    fetch(`/api/live-flights?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}`)
+    .then(r=>r.json())
+    .then(data=>{
+        if(btn){ btn.disabled = false; }
+
+        // Show airport info bar + nearby panels for nearest-used
+        if(data.dep_airport || data.arr_airport){
+            const dep = data.dep_airport
+                ? `<strong>${data.dep_airport.code}</strong> ${data.dep_airport.name}`
+                : (data.origin_city || 'Origin');
+            const arr = data.arr_airport
+                ? `<strong>${data.arr_airport.code}</strong> ${data.arr_airport.name}`
+                : (data.dest_city || 'Destination');
+            if(infoBar){
+                infoBar.innerHTML = `✈️ &nbsp;${dep} &nbsp;→&nbsp; ${arr}`;
+                infoBar.style.display = 'block';
+            }
+        }
+
+        // Always show nearby airports for both cities
+        const depCode = data.dep_airport ? data.dep_airport.code : null;
+        const arrCode = data.arr_airport ? data.arr_airport.code : null;
+        loadNearbyAirportsPanel(data.origin_city || origin, 'nearbyAirportOrigin', depCode);
+        loadNearbyAirportsPanel(data.dest_city   || destination, 'nearbyAirportDest',   arrCode);
+
+        if(data.status==='no_key'){
+            if(btn) btn.innerHTML='⚡ Load Live Data';
+            resultDiv.innerHTML=`
+            <div class="api-setup-box m-2">
+                <div class="fw-bold mb-2" style="color:#E65100;">⚙️ API Key Required for Live Flight Data</div>
+                <p style="font-size:0.8rem;color:#555;margin-bottom:0.75rem;">
+                    To show real-time flights, add a free AviationStack API key:
+                </p>
+                <ol style="font-size:0.78rem;color:#444;line-height:1.8;">
+                    <li>Go to <a href="https://aviationstack.com/signup/free" target="_blank" style="color:#01579B;font-weight:700;">aviationstack.com/signup/free</a> and sign up (free)</li>
+                    <li>Copy your API key from the dashboard</li>
+                    <li>Set it as an environment variable: <code>AVIATIONSTACK_KEY=your_key_here</code></li>
+                    <li>Restart the app — live flights will appear automatically</li>
+                </ol>
+                <div style="font-size:0.75rem;color:#888;margin-top:0.5rem;">Free plan: 100 requests/month. No credit card required.</div>
+                <a href="https://www.makemytrip.com/flights/" target="_blank" class="btn btn-info btn-sm mt-2 text-white fw-bold">
+                    ✈️ Search flights on MakeMyTrip instead →
+                </a>
+            </div>`;
+            return;
+        }
+
+        if(data.status==='no_airport'){
+            if(btn) btn.innerHTML='⚡ Load Live Data';
+            resultDiv.innerHTML=`<div style="background:#FFF8E1;border-left:4px solid #FFA000;padding:0.75rem 1rem;font-size:0.82rem;color:#555;">
+                ⚠️ ${data.message}
+                <br><a href="https://www.makemytrip.com/flights/" target="_blank" style="color:#01579B;font-weight:700;">Search on MakeMyTrip →</a>
+            </div>`;
+            loadNearbyAirportsPanel(origin, 'nearbyAirportOrigin', null);
+            loadNearbyAirportsPanel(destination, 'nearbyAirportDest', null);
+            return;
+        }
+
+        if(data.status==='error'){
+            if(btn) btn.innerHTML='⚡ Retry';
+            resultDiv.innerHTML=`<div class="alert alert-danger m-2" style="font-size:0.8rem;">❌ Error fetching live flights: ${data.message}</div>`;
+            return;
+        }
+
+        if(btn) btn.innerHTML='✅ Live';
+
+        if(!data.flights || data.flights.length===0){
+            const emptyEl = document.getElementById('flightEmptyState');
+            if(emptyEl) emptyEl.style.display='none';
+            resultDiv.innerHTML=`
+            <div style="background:#021B2F;border-radius:0 0 6px 6px;text-align:center;padding:2rem;color:rgba(255,255,255,0.4);font-size:0.82rem;">
+                ✈️ &nbsp;No live flights currently operating on this route.
+                <br><a href="https://www.makemytrip.com/flights/" target="_blank" style="color:#FFA000;">Book on MakeMyTrip →</a>
+            </div>`;
+            return;
+        }
+
+        // Build live flight cards
+        const emptyEl = document.getElementById('flightEmptyState');
+        if(emptyEl) emptyEl.style.display='none';
+
+        let html=`<div style="background:#fff;border-radius:0 0 6px 6px;padding:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <div class="fw-bold mb-2" style="font-size:0.75rem;color:#01579B;text-transform:uppercase;letter-spacing:0.05em;">
+            ⚡ Live Flight Data — ${data.count} flight(s) found
+        </div>`;
+
+        data.flights.forEach(f=>{
+            const depTime = fmt(f.dep_scheduled);
+            const arrTime = fmt(f.arr_scheduled);
+            const delay   = f.dep_delay > 0 ? `<span class="lf-delay">+${f.dep_delay}m delay</span>` : '';
+            const status  = f.status.toLowerCase();
+            let statusBadge = `<span class="lf-status-ot">${f.status}</span>`;
+            if(status.includes('active')||status.includes('en route')) statusBadge=`<span class="lf-status-ok">In Air</span>`;
+            else if(status.includes('land')) statusBadge=`<span class="lf-status-ok">Landed</span>`;
+            else if(status.includes('depart')) statusBadge=`<span class="lf-status-ok">Departed</span>`;
+            else if(status.includes('delay')) statusBadge=`<span class="lf-status-dl">Delayed</span>`;
+            else if(status.includes('cancel')) statusBadge=`<span class="lf-status-dl">Cancelled</span>`;
+            const gate = f.gate_dep ? `Gate ${f.gate_dep}` : '';
+            const term = f.terminal_dep ? `T${f.terminal_dep}` : '';
+
+            html+=`<div class="live-flight-card">
+                <div class="lf-num">${f.flight_number||'—'}</div>
+                <div class="lf-airline">${f.airline||'—'}${term?'<br><small style="color:#aaa;">'+term+'</small>':''}</div>
+                <div class="lf-times">
+                    <span class="lf-t lf-dep">${depTime}</span>
+                    <span class="lf-arrow">→</span>
+                    <span class="lf-t lf-arr">${arrTime}</span>
+                </div>
+                <div>${statusBadge} ${delay}</div>
+                ${gate?`<div style="font-size:0.7rem;color:#888;">${gate}</div>`:''}
+            </div>`;
+        });
+        html+='</div>';
+        resultDiv.innerHTML=html;
+    })
+    .catch(err=>{
+        if(btn){ btn.innerHTML='⚡ Retry'; btn.disabled=false; }
+        resultDiv.innerHTML=`<div class="alert alert-danger m-2" style="font-size:0.8rem;">❌ Network error: ${err.message}</div>`;
+    });
+}
+
+/* ════════════════════════════════════════════
+   NEARBY AIRPORTS
+════════════════════════════════════════════ */
+function renderAirports(data){
+    const cnt = document.getElementById('nearbyAirportsCnt');
+    const box = document.getElementById('nearbyAirportsResult');
+    if(cnt) cnt.textContent = data.airports.length+' found';
+
+    if(!data.airports.length){
+        box.innerHTML=`<div style="text-align:center;padding:1.5rem;color:#aaa;font-size:0.82rem;">
+            <i class="bi bi-airplane" style="font-size:2rem;display:block;margin-bottom:0.5rem;color:#1565C0;opacity:0.4;"></i>
+                No airports found within 80 km radius.
+        </div>`;
+        return;
+    }
+
+    let html='<div class="row g-2">';
+    data.airports.forEach(ap=>{
+        const mapsUrl=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ap.name+', '+ap.city)}`;
+        html+=`<div class="col-md-6">
+        <div class="airport-card">
+            <div class="ap-code">${ap.code}</div>
+            <div class="ap-info">
+                <div class="ap-name">${ap.name}</div>
+                <div class="ap-city">📍 ${ap.city} &nbsp;·&nbsp; Terminal: ${ap.terminal||'Main'}</div>
+            </div>
+            <div class="text-end">
+                <div class="ap-dist">${ap.distance_km} km</div>
+                <a href="${mapsUrl}" target="_blank" class="btn btn-outline-primary btn-sm ap-btn mt-1">
+                    <i class="bi bi-map-fill"></i> Map
+                </a>
+            </div>
+        </div></div>`;
+    });
+    html+='</div>';
+    box.innerHTML=html;
+}
+
+function loadAirportsByCity(cityName){
+    if(!cityName) return;
+    fetch(`/api/nearby-airports?city=${encodeURIComponent(cityName.toLowerCase())}&radius=80`)
+    .then(r=>r.json())
+    .then(data=>{
+        if(data.airports && data.airports.length) renderAirports(data);
+    })
+    .catch(()=>{});
+}
+
+function detectNearbyAirports(){
+    const box = document.getElementById('nearbyAirportsResult');
+    const cnt = document.getElementById('nearbyAirportsCnt');
+    if(!navigator.geolocation){
+        box.innerHTML=`<div class="alert alert-warning" style="font-size:0.8rem;">Your browser does not support geolocation.</div>`;
+        return;
+    }
+    box.innerHTML=`<div style="text-align:center;padding:1.5rem;color:#1565C0;font-size:0.82rem;">
+        <span class="spinner" style="border-color:rgba(0,0,0,0.1);border-top-color:#1565C0;width:22px;height:22px;"></span>
+        &nbsp;Detecting your location…
+    </div>`;
+    if(cnt) cnt.textContent='…';
+
+    navigator.geolocation.getCurrentPosition(
+        pos=>{
+            const {latitude:lat, longitude:lng} = pos.coords;
+            fetch(`/api/nearby-airports?lat=${lat}&lng=${lng}&radius=80`)
+            .then(r=>r.json())
+            .then(renderAirports)
+            .catch(e=>{ box.innerHTML=`<div class="alert alert-danger" style="font-size:0.8rem;">Error: ${e.message}</div>`; });
+        },
+        err=>{
+            box.innerHTML=`<div class="alert alert-warning" style="font-size:0.8rem;">
+                ⚠️ Location access denied. 
+                ${`{{ origin }}`? `Showing airports near <strong>{{ origin }}</strong> instead.` : 'Enter an origin city and search to see nearby airports.'}
+            </div>`;
+            // Fallback: load for searched origin
+            if("{{ origin }}") loadAirportsByCity("{{ origin }}");
+        }
+    );
+}
+
+/* Auto-load on page load */
+document.addEventListener('DOMContentLoaded', ()=>{
+    const origin = "{{ origin }}";
+    const destination = "{{ destination }}";
+
+    /* Auto-load nearby airports (bottom section) */
+    if(origin) loadAirportsByCity(origin);
+
+    /* Auto-load nearby airport panels immediately (always show for flights) */
+    if(origin && destination){
+        loadNearbyAirportsPanel(origin,      'nearbyAirportOrigin', null);
+        loadNearbyAirportsPanel(destination, 'nearbyAirportDest',   null);
+        /* Nearby stations are loaded ONLY inside loadLiveTrains
+           — shown only when no direct station is found */
+    }
+
+    /* Auto-load live trains & flights */
+    if(origin && destination) {
+        setTimeout(loadLiveTrains,  400);
+        setTimeout(loadLiveFlights, 800);
+    }
+
+    /* Set today's date on the date picker */
+    const dp = document.getElementById('trainDatePicker');
+    if(dp && !dp.value){
+        const today = new Date();
+        dp.value = today.toISOString().split('T')[0];
+    }
+});
+</script>
+</body>
+</html>
