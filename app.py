@@ -1410,214 +1410,7 @@ def get_weather_recommendations(weather_data, city_type='destination'):
     
     return recommendations
 
-# Passenger travel planner
-@app.route('/passengers/plan', methods=['GET', 'POST'])
-def passengers_plan():
-    places = [
-        'Krishnankovil', 'Sivakasi', 'Srivilliputhur', 'Tirumangalam', 'Tenkasi', 'Rajapalayam',
-        'Madurai', 'Dindigul', 'Salem', 'Erode', 'Tiruppur', 'Hosur', 'Chennai', 'Bengaluru'
-    ]
-    
-    # Mapping of cities to nearest railway stations
-    NEAREST_STATIONS = {
-        'Krishnankovil': {
-            'station': 'Srivilliputhur',
-            'alternatives': ['Srivilliputhur', 'Virudhunagar'],
-            'distance': '~15 km'
-        },
-        'Sivakasi': {
-            'station': 'Sivakasi',
-            'alternatives': ['Sivakasi', 'Virudhunagar'],
-            'distance': '~10 km'
-        },
-        'Srivilliputhur': {
-            'station': 'Srivilliputhur',
-            'alternatives': ['Srivilliputhur'],
-            'distance': 'Direct'
-        },
-        'Tirumangalam': {
-            'station': 'Tirumangalam',
-            'alternatives': ['Tirumangalam', 'Madurai'],
-            'distance': '~20 km to Madurai'
-        },
-        'Tenkasi': {
-            'station': 'Tenkasi',
-            'alternatives': ['Tenkasi'],
-            'distance': 'Direct'
-        },
-        'Rajapalayam': {
-            'station': 'Rajapalayam',
-            'alternatives': ['Rajapalayam', 'Virudhunagar'],
-            'distance': '~25 km to Virudhunagar'
-        },
-        'Madurai': {
-            'station': 'Madurai Junction',
-            'alternatives': ['Madurai Junction'],
-            'distance': 'Direct'
-        },
-        'Dindigul': {
-            'station': 'Dindigul Junction',
-            'alternatives': ['Dindigul Junction'],
-            'distance': 'Direct'
-        },
-        'Salem': {
-            'station': 'Salem Junction',
-            'alternatives': ['Salem Junction'],
-            'distance': 'Direct'
-        },
-        'Erode': {
-            'station': 'Erode Junction',
-            'alternatives': ['Erode Junction'],
-            'distance': 'Direct'
-        },
-        'Tiruppur': {
-            'station': 'Tiruppur',
-            'alternatives': ['Tiruppur'],
-            'distance': 'Direct'
-        },
-        'Hosur': {
-            'station': 'Hosur',
-            'alternatives': ['Hosur'],
-            'distance': 'Direct'
-        },
-        'Chennai': {
-            'station': 'Chennai Central',
-            'alternatives': ['Chennai Central', 'Chennai Egmore'],
-            'distance': 'Direct'
-        },
-        'Bengaluru': {
-            'station': 'Bangalore City',
-            'alternatives': ['Bangalore City', 'Yesvantpur'],
-            'distance': 'Direct'
-        }
-    }
-    
-    # Airport mapping for flights
-    NEAREST_AIRPORTS = {
-        'Krishnankovil': 'IXM',  # Madurai Airport
-        'Sivakasi': 'IXM',
-        'Srivilliputhur': 'IXM',
-        'Tirumangalam': 'IXM',
-        'Tenkasi': 'IXM',
-        'Rajapalayam': 'IXM',
-        'Madurai': 'IXM',
-        'Dindigul': 'IXM',
-        'Salem': 'TRZ',  # Trichy Airport
-        'Erode': 'COK',  # Coimbatore Airport
-        'Tiruppur': 'COK',
-        'Hosur': 'BLR',  # Bengaluru Airport
-        'Chennai': 'MAA',  # Chennai Airport
-        'Bengaluru': 'BLR'
-    }
-    
-    query = {
-        'origin': (request.form.get('origin') or request.args.get('origin') or '').strip(),
-        'destination': (request.form.get('destination') or request.args.get('destination') or '').strip(),
-        'date': (request.form.get('date') or request.args.get('date') or ''),
-        'time': (request.form.get('time') or request.args.get('time') or '')
-    }
-    
-    # Get station information for origin and destination
-    origin_station_info = NEAREST_STATIONS.get(query['origin'], None)
-    dest_station_info = NEAREST_STATIONS.get(query['destination'], None)
-    origin_airport = NEAREST_AIRPORTS.get(query['origin'], 'IXM')
-    dest_airport = NEAREST_AIRPORTS.get(query['destination'], 'BLR')
-    
-    # Get weather data for origin and destination
-    origin_weather = get_weather_data(query['origin']) if query['origin'] else None
-    dest_weather = get_weather_data(query['destination']) if query['destination'] else None
-    
-    # Get weather-based recommendations
-    origin_recommendations = get_weather_recommendations(origin_weather, 'origin') if origin_weather else []
-    dest_recommendations = get_weather_recommendations(dest_weather, 'destination') if dest_weather else []
 
-    # Basic suggestions from our DB for bus services
-    direct_services = []
-    connecting_suggestions = []
-    if query['origin'] and query['destination']:
-        direct_services = db.session.query(BusService).filter(
-            func.lower(BusService.origin) == func.lower(query['origin']),
-            func.lower(BusService.destination) == func.lower(query['destination']),
-            BusService.is_active == True
-        ).order_by(BusService.departure_time).all()
-
-        # Simple heuristic: suggest via a hub if no direct
-        if not direct_services:
-            hubs = ['Madurai', 'Tiruchirappalli', 'Coimbatore']
-            for hub in hubs:
-                leg1 = db.session.query(BusService).filter(
-                    func.lower(BusService.origin) == func.lower(query['origin']),
-                    func.lower(BusService.destination) == func.lower(hub),
-                    BusService.is_active == True
-                ).first()
-                leg2 = db.session.query(BusService).filter(
-                    func.lower(BusService.origin) == func.lower(hub),
-                    func.lower(BusService.destination) == func.lower(query['destination']),
-                    BusService.is_active == True
-                ).first()
-                if leg1 and leg2:
-                    connecting_suggestions.append({'hub': hub, 'leg1': leg1, 'leg2': leg2})
-
-    # Build external helper links (these open real-time providers)
-    def build_redbus_link(origin, destination, date_str):
-        base = 'https://www.redbus.in/bus-tickets/'
-        if origin and destination:
-            return f"{base}{origin.lower().replace(' ', '-')}-to-{destination.lower().replace(' ', '-')}-bus-tickets"
-        return 'https://www.redbus.in/'
-
-    def build_railyatri_link(origin, destination, origin_station_info, dest_station_info):
-        base = 'https://www.railyatri.in/train-ticket'
-        if origin and destination:
-            # Use nearest station for train booking
-            origin_station = origin_station_info['station'] if origin_station_info else origin
-            dest_station = dest_station_info['station'] if dest_station_info else destination
-            return f"{base}/from-{origin_station.lower().replace(' ', '-')}-to-{dest_station.lower().replace(' ', '-')}"
-        return base
-
-    def build_irctc_link(origin, destination, origin_station_info, dest_station_info):
-        # IRCTC search with proper station names
-        if origin and destination:
-            origin_station = origin_station_info['station'] if origin_station_info else origin
-            dest_station = dest_station_info['station'] if dest_station_info else destination
-            q = f"site:irctc.co.in train booking {origin_station} to {dest_station}"
-            return f"https://www.google.com/search?q={q.replace(' ', '+')}"
-        return 'https://www.irctc.co.in/nget/train-search'
-
-    def build_flights_link(origin_airport_code, dest_airport_code, date_str):
-        # Use actual airport codes
-        return f"https://www.google.com/travel/flights?q=Flights%20from%20{origin_airport_code}%20to%20{dest_airport_code}"
-
-    links = {
-        'redbus': build_redbus_link(query['origin'], query['destination'], query['date']) if query['origin'] and query['destination'] else 'https://www.redbus.in/',
-        'railyatri': build_railyatri_link(query['origin'], query['destination'], origin_station_info, dest_station_info) if query['origin'] and query['destination'] else 'https://www.railyatri.in/',
-        'irctc': build_irctc_link(query['origin'], query['destination'], origin_station_info, dest_station_info) if query['origin'] and query['destination'] else 'https://www.irctc.co.in/',
-        'flights': build_flights_link(origin_airport, dest_airport, query['date']) if query['origin'] and query['destination'] else 'https://www.google.com/travel/flights'
-    }
-
-    # Get multi-modal coordination recommendations
-    coordination_recommendations = []
-    if query['origin'] and query['destination']:
-        travel_date = datetime.strptime(query['date'], '%Y-%m-%d').date() if query['date'] else date.today()
-        preferred_time = datetime.strptime(query['time'], '%H:%M').time() if query['time'] else None
-        coordination_recommendations = get_passenger_coordination_recommendations(
-            query['origin'], query['destination'], travel_date, preferred_time
-        )
-    
-    return render_template('apassengers/plan.html',
-                           q=query,
-                           places=places,
-                           direct_services=direct_services,
-                           connecting_suggestions=connecting_suggestions,
-                           links=links,
-                           origin_station_info=origin_station_info,
-                           dest_station_info=dest_station_info,
-                           origin_airport=origin_airport,
-                           dest_airport=dest_airport,
-                           origin_weather=origin_weather,
-                           dest_weather=dest_weather,
-                           origin_recommendations=origin_recommendations,
-                           dest_recommendations=dest_recommendations,
-                           coordination_recommendations=coordination_recommendations)
 @app.route('/analytics')
 @login_required
 def analytics():
@@ -5095,6 +4888,10 @@ def passenger_timetables():
         frozenset(['krishnankovil','virudhunagar']): 18,
         frozenset(['krishnankovil','chennai']): 525,
         frozenset(['krishnankovil','bengaluru']): 500,
+        frozenset(['krishnankoil','madurai']): 65,
+        frozenset(['krishnankoil','virudhunagar']): 18,
+        frozenset(['krishnankoil','chennai']): 525,
+        frozenset(['krishnankoil','bengaluru']): 500,
         frozenset(['sivakasi','madurai']): 80,
         frozenset(['sivakasi','virudhunagar']): 15,
         frozenset(['sivakasi','chennai']): 540,
@@ -5136,10 +4933,28 @@ def passenger_timetables():
     }
 
     def get_travel_info(orig, dest):
+        import math as _m
         key = frozenset([orig.lower(), dest.lower()])
         dist = _DISTANCES.get(key)
+
+        # ── Haversine fallback for any city pair not in the hardcoded dict ──
+        if not dist:
+            c1 = CITY_COORDS.get(orig.lower())
+            c2 = CITY_COORDS.get(dest.lower())
+            if c1 and c2:
+                # straight-line × 1.3 road-winding factor
+                R = 6371.0
+                dlat = _m.radians(c2[0] - c1[0])
+                dlon = _m.radians(c2[1] - c1[1])
+                a = (_m.sin(dlat/2)**2 +
+                     _m.cos(_m.radians(c1[0])) * _m.cos(_m.radians(c2[0])) *
+                     _m.sin(dlon/2)**2)
+                straight = R * 2 * _m.asin(_m.sqrt(a))
+                dist = round(straight * 1.3)   # road factor
+
         if not dist:
             return None
+
         car_min  = int(dist / 60 * 60)   # avg 60 km/h
         bike_min = int(dist / 40 * 60)   # avg 40 km/h
         car_fuel  = round(dist / 15 * 102, 0)   # ~15 km/l petrol ₹102
@@ -5901,7 +5716,11 @@ CITY_TO_IATA = {
 
 # City coordinates for nearby-airport search
 CITY_COORDS = {
-    'srivilliputhur':(9.5121,77.6336),'krishnankovil':(9.4897,77.7177),
+    # Krishnankovil alternate spellings
+    'krishnankovil':(9.4897,77.7177),'krishnankoil':(9.4897,77.7177),
+    'krishnan kovil':(9.4897,77.7177),'krishnan koil':(9.4897,77.7177),
+    'krishnankoil ': (9.4897,77.7177),
+    'srivilliputhur':(9.5121,77.6336),'srivilliputtur':(9.5121,77.6336),
     'sivakasi':(9.4514,77.8086),'virudhunagar':(9.5849,77.9559),
     'rajapalayam':(9.4529,77.5568),'tenkasi':(8.9593,77.3152),
     'madurai':(9.9252,78.1198),'dindigul':(10.3624,77.9695),
@@ -5916,13 +5735,77 @@ CITY_COORDS = {
     'hosur':(12.7409,77.8253),'krishnagiri':(12.5186,78.2137),
     'mysuru':(12.2958,76.6394),'mysore':(12.2958,76.6394),
     'mangalore':(12.9141,74.8560),'mangaluru':(12.9141,74.8560),
-    'hyderabad':(17.3850,78.4867),'kochi':(9.9312,76.2673),
+    'hyderabad':(17.3850,78.4867),'secunderabad':(17.4358,78.5013),
+    'kochi':(9.9312,76.2673),'ernakulam':(10.0097,76.2970),
     'mumbai':(19.0760,72.8777),'delhi':(28.6139,77.2090),
-    'kolkata':(22.5726,88.3639),'pune':(18.5204,73.8567),
-    'ahmedabad':(23.0225,72.5714),'visakhapatnam':(17.6868,83.2185),
+    'kolkata':(22.5726,88.3639),'howrah':(22.5839,88.3424),
+    'pune':(18.5204,73.8567),'nagpur':(21.1458,79.0882),
+    'nashik':(19.9975,73.7898),'aurangabad':(19.8762,75.3433),
+    'ahmedabad':(23.0225,72.5714),'surat':(21.1702,72.8311),
+    'vadodara':(22.3072,73.1812),'rajkot':(22.3039,70.8022),
+    'visakhapatnam':(17.6868,83.2185),'vizag':(17.6868,83.2185),
+    'vijayawada':(16.5193,80.6167),'tirupati':(13.6288,79.4192),
+    'nellore':(14.4426,79.9865),'guntur':(16.3067,80.4365),
     'thiruvananthapuram':(8.5241,76.9366),'trivandrum':(8.5241,76.9366),
     'kozhikode':(11.2588,75.7804),'calicut':(11.2588,75.7804),
-    'tirumangalam':(9.8267,77.9878),'dindigul':(10.3624,77.9695),
+    'thrissur':(10.5276,76.2144),'palakkad':(10.7867,76.6548),
+    'kollam':(8.8932,76.6141),'alappuzha':(9.4981,76.3388),
+    'kottayam':(9.5916,76.5222),'nagercoil':(8.1693,77.4167),
+    'jaipur':(26.9124,75.7873),'jodhpur':(26.2389,73.0243),
+    'udaipur':(24.5854,73.7125),'ajmer':(26.4499,74.6399),
+    'lucknow':(26.8467,80.9462),'kanpur':(26.4499,80.3319),
+    'varanasi':(25.3176,82.9739),'allahabad':(25.4358,81.8463),
+    'patna':(25.5941,85.1376),'guwahati':(26.1445,91.7362),
+    'bhubaneswar':(20.2961,85.8245),'cuttack':(20.4625,85.8828),
+    'agra':(27.1767,78.0081),'chandigarh':(30.7333,76.7794),
+    'amritsar':(31.6340,74.8723),'ludhiana':(30.9010,75.8573),
+    'bhopal':(23.2599,77.4126),'indore':(22.7196,75.8577),
+    'goa':(15.2993,74.1240),'panaji':(15.4909,73.8278),
+    'mysuru':(12.2958,76.6394),'mysore':(12.2958,76.6394),
+    'hubli':(15.3647,75.1240),'dharwad':(15.4589,75.0078),
+    'mangalore':(12.9141,74.8560),'mangaluru':(12.9141,74.8560),
+    'tirumangalam':(9.8267,77.9878),
+    # Virudhunagar district villages
+    'watrap':(9.5418,77.7061),
+    'tiruchuli':(9.6204,77.9741),'aruppukkottai':(9.5075,78.0964),
+    'kariapatti':(9.4725,77.9108),'sattur':(9.3547,77.9098),
+    'narikudi':(9.4008,78.0131),'vembakottai':(9.3614,77.8219),
+    'ilanji':(9.4217,77.7731),'tiruttangal':(9.4231,77.8639),
+    # Tirunelveli / Tenkasi
+    'tenkasi':(8.9593,77.3152),'courtallam':(8.9354,77.2753),
+    'ambasamudram':(8.7008,77.4521),'valliyur':(8.3865,77.6132),
+    'nanguneri':(8.4975,77.6666),'tiruchendur':(8.4979,78.1243),
+    'kayalpatnam':(8.5726,78.1257),'eral':(8.6276,77.8932),
+    'ottapidaram':(8.7499,78.0609),'kadayanallur':(9.0829,77.3480),
+    'surandai':(8.9808,77.4239),'alangulam':(8.8702,77.4143),
+    'vikramasingapuram':(8.7973,77.4384),'cheranmahadevi':(8.7213,77.5274),
+    'kalakkad':(8.4720,77.5513),'mulapozhi':(8.3533,77.5476),
+    # Theni / Dindigul
+    'theni':(10.0107,77.4770),'cumbum':(9.7314,77.2843),
+    'periyakulam':(10.1194,77.5404),'uthamapalayam':(9.8061,77.3353),
+    'bodinayakanur':(10.0110,77.3543),'gudalur':(11.4989,76.4965),
+    'palani':(10.4510,77.5210),'batlagundu':(10.1597,77.7530),
+    'natham':(10.3200,77.8850),'oddanchatram':(10.5610,77.7374),
+    'vedasandur':(10.5340,77.9580),'kambam':(9.7288,77.2687),
+    'shanarpatti':(10.1900,77.8500),'ayyampettai':(10.8753,79.1000),
+    'sedapatti':(9.8900,78.0500),
+    # Madurai district villages
+    'melur':(10.0427,78.3347),'usilampatti':(9.9644,77.7028),
+    'andipatti':(10.0219,77.6272),'sholavandan':(9.8489,78.0028),
+    'vadipatti':(10.0769,77.9878),'nilakottai':(10.1689,77.8628),
+    'kalligudi':(9.9156,78.0528),'peraiyur':(9.8444,77.9481),
+    'kottampatti':(10.0222,77.8200),'alanganallur':(9.9989,78.1789),
+    'sholavandan':(9.8489,78.0028),
+    # Trichy / Salem / Coimbatore region
+    'musiri':(10.9522,78.4426),'lalgudi':(10.8748,78.8174),
+    'kulithalai':(10.9345,78.4241),'paramathi':(11.3860,78.1197),
+    'rasipuram':(11.4568,78.1783),'tiruchengode':(11.3860,77.8945),
+    'mettur':(11.7961,77.8005),'omalur':(11.7374,78.0441),
+    'attur':(11.5964,78.5978),'pollachi':(10.6584,77.0085),
+    'udumalaipettai':(10.5862,77.2513),'valparai':(10.3264,76.9618),
+    'anaimalai':(10.5808,76.9281),'kinathukadavu':(10.6408,77.0947),
+    'kovilpatti':(9.1765,77.8697),'rajapalayam':(9.4529,77.5568),
+    'sivakasi':(9.4514,77.8086),'virudhunagar':(9.5849,77.9559),
 }
 
 
@@ -5939,6 +5822,19 @@ def _haversine(lat1, lon1, lat2, lon2):
 def _city_coords(city_name):
     """Return (lat, lng) for a city name via exact or partial match in CITY_COORDS."""
     c = city_name.strip().lower()
+    # Normalize common alternate spellings
+    _ALIASES = {
+        'krishnankoil': 'krishnankovil',
+        'krishnan koil': 'krishnankovil',
+        'krishnan kovil': 'krishnankovil',
+        'srivilliputtur': 'srivilliputhur',
+        'bangalore': 'bengaluru',
+        'trivandrum': 'thiruvananthapuram',
+        'bombay': 'mumbai',
+        'calcutta': 'kolkata',
+        'madras': 'chennai',
+    }
+    c = _ALIASES.get(c, c)
     if c in CITY_COORDS:
         return CITY_COORDS[c]
     for k, v in CITY_COORDS.items():
@@ -6168,7 +6064,8 @@ def api_live_flights():
 # City name → primary station code (IRCTC station codes)
 CITY_TO_STATION = {
     # Tamil Nadu
-    'srivilliputhur': 'SVPR',    'krishnankovil': 'KRVL',
+    'srivilliputhur': 'SVPR', 'srivilliputtur': 'SVPR',
+    # krishnankovil / krishnankoil — no direct station, geo-nearest will pick VPT/SVPR
     'sivakasi':       'SVKS',   'virudhunagar':  'VPT',
     'rajapalayam':    'RJPM',   'tenkasi':       'TNKV',
     'madurai':        'MDU',     'dindigul':      'DG',
@@ -6258,6 +6155,14 @@ STATION_INFO = {
     'TUP': ('Tiruppur',                'Tiruppur',       11.1121,  77.3561),
     'TJ':  ('Thanjavur Junction',      'Thanjavur',      10.7869,  79.1372),
     'SVPR':('Srivilliputtur',           'Srivilliputhur',  9.5121,  77.6336),
+    'SVKS':('Sivakasi',                'Sivakasi',        9.4514,  77.8086),
+    'RJPM':('Rajapalayam',             'Rajapalayam',     9.4529,  77.5568),
+    'TNKV':('Tenkasi Junction',        'Tenkasi',         8.9593,  77.3152),
+    'CVP': ('Kovilpatti',              'Kovilpatti',      9.1765,  77.8697),
+    'ARPT':('Aruppukkottai',           'Aruppukkottai',   9.5075,  78.0964),
+    # WRJ (Watrap) removed — narrow gauge line, no major express trains
+    'ALU': ('Alangulam',               'Alangulam',       8.8702,  77.4143),
+    'KTMD':('Katpadi Junction',        'Vellore',        12.9165,  79.1325),
     'HSRA':('Hosur',                   'Hosur',          12.7349,  77.8305),
     'VLR': ('Vellore Cantonment',      'Vellore',        12.9165,  79.1325),
     'TPTY':('Tirupati',                'Tirupati',       13.6288,  79.4192),
@@ -6278,8 +6183,15 @@ def api_live_trains():
     """
     origin_city  = request.args.get('origin', '').strip()
     dest_city    = request.args.get('destination', '').strip()
-    origin_lower = origin_city.lower()
-    dest_lower   = dest_city.lower()
+    # Normalize alternate spellings
+    _SPELL = {
+        'krishnankoil':'krishnankovil','krishnan koil':'krishnankovil',
+        'krishnan kovil':'krishnankovil','srivilliputtur':'srivilliputhur',
+        'bangalore':'bengaluru','trivandrum':'thiruvananthapuram',
+        'bombay':'mumbai','calcutta':'kolkata','madras':'chennai',
+    }
+    origin_lower = _SPELL.get(origin_city.lower(), origin_city.lower())
+    dest_lower   = _SPELL.get(dest_city.lower(),   dest_city.lower())
     journey_date = request.args.get('date', '')
     if not journey_date:
         from datetime import date as _date
@@ -6368,6 +6280,42 @@ def api_live_trains():
         except Exception:
             return ''
 
+    def _fetch_trains_erail(src_code, dst_code, erail_date, timeout=20):
+        """Call erail.in and return list of parsed train dicts (empty list on failure)."""
+        url = (f'https://erail.in/rail/getTrains.aspx'
+               f'?TrainNo=&Station_From={src_code}&Station_To={dst_code}'
+               f'&TrainDate={erail_date}&ServiceID=4&STFLAG=Y&ENDFLAG=Y&LangID=0&APIKey={api_key}')
+        resp = requests.get(url, timeout=timeout)
+        if resp.status_code != 200 or not resp.text.strip():
+            return []
+        raw_records = resp.text.strip().split('^')
+        trains = []
+        for rec in raw_records[1:]:
+            f = rec.strip().split('~')
+            if len(f) < 12:
+                continue
+            dep     = f[10].strip()
+            arr     = f[11].strip()
+            dep_fmt = dep.replace('.', ':') if '.' in dep else dep
+            arr_fmt = arr.replace('.', ':') if '.' in arr else arr
+            trains.append({
+                'number':            f[0].strip(),
+                'name':              f[1].strip(),
+                'train_origin':      f[6].strip(),
+                'train_origin_code': f[7].strip(),
+                'from_station':      src_code,
+                'to_station':        dst_code,
+                'to_name':           f[8].strip(),
+                'dep_time':     dep_fmt,
+                'arr_time':     arr_fmt,
+                'duration':     _calc_duration(dep, arr),
+                'run_days':     _parse_run_days(f[13].strip() if len(f) > 13 else ''),
+                'classes':      _parse_classes(f[21].strip() if len(f) > 21 else ''),
+                'train_type':   f[32].strip() if len(f) > 32 else '',
+                'distance':     f[40].strip() if len(f) > 40 else '',
+            })
+        return trains
+
     try:
         # erail.in date format: DDMMYYYY
         from datetime import datetime as _dt
@@ -6377,42 +6325,42 @@ def api_live_trains():
         except Exception:
             erail_date = journey_date.replace('-', '')
 
-        url = (f'https://erail.in/rail/getTrains.aspx'
-               f'?TrainNo=&Station_From={from_code}&Station_To={to_code}'
-               f'&TrainDate={erail_date}&ServiceID=4&STFLAG=Y&ENDFLAG=Y&LangID=0&APIKey={api_key}')
+        trains = _fetch_trains_erail(from_code, to_code, erail_date)
 
-        resp = requests.get(url, timeout=20)
+        # ── Auto-retry: if nearest-used station returned 0 trains, try next
+        #    nearby stations (up to 5 retries, prefer stations >10 km away
+        #    since those are more likely on mainline routes) ──
+        if not trains and from_nearest_used:
+            orig_coords = CITY_COORDS.get(origin_lower)
+            if orig_coords:
+                import math as _m
+                tried = {from_code}
+                candidates = []
+                for code, info in STATION_INFO.items():
+                    if code in tried or len(info) < 4:
+                        continue
+                    dlat = _m.radians(info[2] - orig_coords[0])
+                    dlon = _m.radians(info[3] - orig_coords[1])
+                    a = (_m.sin(dlat/2)**2 +
+                         _m.cos(_m.radians(orig_coords[0])) * _m.cos(_m.radians(info[2])) *
+                         _m.sin(dlon/2)**2)
+                    d = 6371 * 2 * _m.asin(_m.sqrt(a))
+                    if d <= 200:
+                        candidates.append((d, code, info))
+                candidates.sort(key=lambda x: x[0])
 
-        if resp.status_code != 200 or not resp.text.strip():
-            return jsonify({'status': 'api_error', 'message': 'erail.in returned empty response', 'trains': []})
-
-        raw_records = resp.text.strip().split('^')
-        trains = []
-
-        for rec in raw_records[1:]:   # skip header
-            f = rec.strip().split('~')
-            if len(f) < 12:
-                continue
-            dep   = f[10].strip()
-            arr   = f[11].strip()
-            # Convert HH.MM → HH:MM
-            dep_fmt = dep.replace('.', ':') if '.' in dep else dep
-            arr_fmt = arr.replace('.', ':') if '.' in arr else arr
-            trains.append({
-                'number':       f[0].strip(),
-                'name':         f[1].strip(),
-                'from_station': f[7].strip(),
-                'from_name':    f[6].strip(),
-                'to_station':   f[9].strip(),
-                'to_name':      f[8].strip(),
-                'dep_time':     dep_fmt,
-                'arr_time':     arr_fmt,
-                'duration':     _calc_duration(dep, arr),
-                'run_days':     _parse_run_days(f[13].strip() if len(f) > 13 else ''),
-                'classes':      _parse_classes(f[21].strip() if len(f) > 21 else ''),
-                'train_type':   f[32].strip() if len(f) > 32 else '',
-                'distance':     f[40].strip() if len(f) > 40 else '',
-            })
+                for alt_dist, alt_code, alt_info in candidates[:5]:
+                    try:
+                        # Use shorter 10s timeout for retries to avoid long delays
+                        alt_trains = _fetch_trains_erail(alt_code, to_code, erail_date, timeout=10)
+                    except Exception:
+                        alt_trains = []
+                    if alt_trains:
+                        trains = alt_trains
+                        from_code = alt_code
+                        from_info = alt_info
+                        from_nearest_dist = round(alt_dist, 1)
+                        break
 
         return jsonify({
             'status': 'ok',

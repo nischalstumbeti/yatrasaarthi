@@ -3,149 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Options – Yatra Saarthi</title>
+    <title>Plan Your Trip – Yatra Saarthi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateInit" async></script>
     <style>
         :root {
-            --navy:  #0B1F3A;
-            --blue:  #1A3A5C;
-            --orange:#E65100;
-            --amber: #FFA000;
-            --light: #F4F6F9;
+            --navy:   #0B1F3A;
+            --blue:   #1A3A5C;
+            --deep:   #061326;
+            --orange: #FF5722;
+            --amber:  #FFB300;
+            --light:  #F0F4F8;
+            --border: #E5E9F0;
+            --muted:  #6B7280;
         }
-        * { font-family: Verdana, Geneva, Tahoma, sans-serif !important; }
-        body { background:var(--light); margin:0; display:flex; flex-direction:column; min-height:100vh; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1,h2,h3,h4,h5,h6 { font-family: 'Poppins', sans-serif; }
 
-        /* Ticker */
-        .ticker-bar { background:var(--orange); color:#fff; font-size:0.72rem; padding:4px 0; overflow:hidden; white-space:nowrap; }
-        .ticker-inner { display:inline-block; animation:ticker 32s linear infinite; }
+        /* ── Ticker ── */
+        .ticker-bar {
+            background: linear-gradient(90deg, #FF5722 0%, #E64A19 100%);
+            color: #fff; font-size: 0.7rem; font-family: 'Inter', sans-serif;
+            padding: 5px 0; overflow: hidden; white-space: nowrap;
+        }
+        .ticker-inner { display: inline-block; animation: ticker 32s linear infinite; }
         @keyframes ticker { 0%{transform:translateX(100vw);} 100%{transform:translateX(-100%);} }
 
-        /* Navbar */
-        .main-nav { background:var(--navy); border-bottom:3px solid var(--orange); padding:0 1.5rem; height:60px; display:flex; align-items:center; position:sticky; top:0; z-index:1000; box-shadow:0 2px 12px rgba(0,0,0,0.35); }
-        .nav-brand { display:flex; align-items:center; gap:0.6rem; text-decoration:none; color:#fff; font-weight:800; font-size:1.1rem; }
-        .nav-brand .bus-pill { background:var(--orange); border-radius:6px; padding:4px 10px; font-size:0.82rem; display:flex; align-items:center; gap:0.4rem; }
-        .nav-brand .site-name { color:var(--amber); }
-        .nav-links { display:flex; align-items:center; gap:0.25rem; margin-left:auto; flex-wrap:wrap; }
-        .nav-links a { color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.78rem; padding:5px 10px; border-radius:4px; transition:all 0.15s; display:flex; align-items:center; gap:0.3rem; }
-        .nav-links a:hover { background:rgba(255,255,255,0.12); color:#fff; }
-        .nav-links a.active { background:var(--orange); color:#fff; }
-        .lang-btns { display:flex; gap:4px; margin-left:0.5rem; border-left:1px solid rgba(255,255,255,0.2); padding-left:0.5rem; }
-        .lang-btns button { background:rgba(255,255,255,0.1); border:none; color:#fff; border-radius:3px; padding:3px 8px; font-size:0.68rem; cursor:pointer; }
-        .lang-btns button.active { background:var(--orange); }
-
-        /* Page header */
-        .page-header { background:var(--navy); color:#fff; padding:1.25rem 0 1rem; border-bottom:3px solid var(--orange); }
-        .page-header h2 { font-size:1.3rem; font-weight:800; margin:0; }
-        .page-header p { color:rgba(255,255,255,0.6); font-size:0.78rem; margin:0.15rem 0 0; }
-
-        /* Search */
-        .search-panel { background:#fff; padding:1.1rem 0; box-shadow:0 2px 8px rgba(0,0,0,0.07); margin-bottom:1.25rem; }
-        .search-panel label { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--navy); }
-        .search-panel .form-control { border:1.5px solid #dce3ec; font-size:0.85rem; }
-        .search-panel .form-control:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(230,81,0,0.1); }
-        .btn-search { background:var(--orange); color:#fff; border:none; font-weight:700; font-size:0.88rem; padding:0.55rem 1.5rem; border-radius:6px; }
-        .btn-search:hover { background:#bf360c; color:#fff; }
-        .btn-clear { font-size:0.78rem; color:var(--orange); font-weight:700; text-decoration:none; }
-
-        /* ── Mode summary strip ── */
-        .mode-strip { display:flex; gap:0.6rem; overflow-x:auto; padding:0.75rem 0; flex-wrap:nowrap; }
-        .mode-chip {
-            flex-shrink:0;
-            display:flex; align-items:center; gap:0.5rem;
-            background:#fff;
-            border:2px solid #e0e4ec;
-            border-radius:10px;
-            padding:0.5rem 1rem;
-            cursor:pointer;
-            transition:all 0.15s;
-            text-decoration:none;
-            color:var(--navy);
-            font-size:0.78rem;
-            font-weight:700;
+        /* ── Navbar ── */
+        .main-nav {
+            background: rgba(11, 31, 58, 0.97);
+            backdrop-filter: blur(12px);
+            padding: 0 2rem; height: 64px;
+            display: flex; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
-        .mode-chip:hover { border-color:var(--orange); color:var(--orange); }
-        .mode-chip.active { background:var(--navy); border-color:var(--navy); color:var(--amber); }
-        .mode-chip .chip-icon { font-size:1.3rem; }
-        .mode-chip .chip-count { font-size:0.65rem; color:#888; font-weight:400; display:block; }
-        .mode-chip.active .chip-count { color:rgba(255,200,0,0.6); }
+        .nav-brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; flex-shrink: 0; }
+        .brand-logo {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--orange), #FF8A65);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(255,87,34,0.4);
+        }
+        .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+        .brand-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1rem; color: #fff; }
+        .brand-sub { font-size: 0.58rem; color: var(--amber); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+        .nav-links { display: flex; align-items: center; gap: 0.15rem; margin-left: auto; flex-wrap: wrap; }
+        .nav-links a {
+            color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.78rem; font-weight: 500;
+            padding: 6px 12px; border-radius: 8px; transition: all 0.2s;
+            display: flex; align-items: center; gap: 0.35rem; white-space: nowrap;
+        }
+        .nav-links a:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-links a.active {
+            background: linear-gradient(135deg, var(--orange), #FF8A65);
+            color: #fff; box-shadow: 0 2px 8px rgba(255,87,34,0.35);
+        }
+        .lang-btns { display: flex; gap: 4px; margin-left: 0.75rem; border-left: 1px solid rgba(255,255,255,0.15); padding-left: 0.75rem; }
+        .lang-btns button {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.75); border-radius: 6px;
+            padding: 3px 9px; font-size: 0.68rem; cursor: pointer; transition: all 0.2s;
+        }
+        .lang-btns button:hover, .lang-btns button.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+
+        /* ── Page header ── */
+        .page-header {
+            background: linear-gradient(160deg, var(--deep) 0%, var(--navy) 50%, var(--blue) 100%);
+            color: #fff; padding: 1.75rem 0 1.5rem;
+            border-bottom: 3px solid var(--orange);
+            position: relative; overflow: hidden;
+        }
+        .page-header::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .page-header .ph-content { position: relative; z-index: 1; }
+        .page-header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.4rem; font-weight: 800; margin: 0; color: #fff;
+        }
+        .page-header p { color: rgba(255,255,255,0.55); font-size: 0.8rem; margin: 0.2rem 0 0; }
+        .ph-crumbs {
+            display: flex; gap: 0.5rem; align-items: center;
+            font-size: 0.68rem; color: rgba(255,255,255,0.4);
+            margin-bottom: 0.4rem;
+        }
+        .ph-crumbs a { color: var(--amber); text-decoration: none; }
+        .ph-crumbs a:hover { color: #fff; }
+        .ph-crumbs span { color: rgba(255,255,255,0.25); }
+
+        /* ── Search panel ── */
+        .search-panel {
+            background: #fff; padding: 1.25rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+        .search-panel label {
+            font-size: 0.68rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.07em; color: var(--navy);
+            display: block; margin-bottom: 5px;
+        }
+        .search-panel .form-control {
+            border: 1.5px solid #dce3ec; font-size: 0.87rem;
+            border-radius: 10px; font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .search-panel .form-control:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,87,34,0.12); }
+        .btn-search {
+            background: linear-gradient(135deg, var(--orange), #FF8A65);
+            color: #fff; border: none; font-weight: 700; font-size: 0.88rem;
+            padding: 0.6rem 1.5rem; border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 4px 14px rgba(255,87,34,0.35);
+            transition: all 0.2s;
+        }
+        .btn-search:hover { background: linear-gradient(135deg, #E64A19, var(--orange)); color: #fff; transform: translateY(-1px); }
+        .btn-clear { font-size: 0.78rem; color: var(--orange); font-weight: 600; text-decoration: none; padding: 0.5rem 0.75rem; border-radius: 8px; border: 1.5px solid rgba(255,87,34,0.3); transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.3rem; }
+        .btn-clear:hover { background: rgba(255,87,34,0.06); color: var(--orange); }
+
+        /* ── Mode strip ── */
+        .mode-strip { display:flex; gap:0.6rem; overflow-x:auto; padding:0.5rem 0 1rem; flex-wrap:nowrap; }
+        .mode-chip {
+            flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem;
+            background: #fff; border: 2px solid var(--border);
+            border-radius: 12px; padding: 0.5rem 1.1rem;
+            cursor: pointer; transition: all 0.2s;
+            text-decoration: none; color: var(--navy);
+            font-size: 0.78rem; font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .mode-chip:hover { border-color: var(--orange); color: var(--orange); box-shadow: 0 4px 14px rgba(255,87,34,0.12); }
+        .mode-chip.active {
+            background: var(--navy); border-color: var(--navy);
+            color: var(--amber); box-shadow: 0 4px 14px rgba(11,31,58,0.2);
+        }
+        .mode-chip .chip-icon { font-size: 1.2rem; }
+        .mode-chip .chip-count { font-size: 0.62rem; color: #888; font-weight: 400; display: block; margin-top: 1px; }
+        .mode-chip.active .chip-count { color: rgba(255,200,0,0.6); }
 
         /* ── Section headers ── */
         .sec-header {
-            background:var(--navy); color:var(--amber);
-            padding:0.65rem 1.1rem;
-            border-radius:6px 6px 0 0;
-            display:flex; align-items:center; justify-content:space-between;
-            font-weight:800; font-size:0.88rem;
+            background: var(--navy); color: var(--amber);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px 12px 0 0;
+            display: flex; align-items: center; justify-content: space-between;
+            font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.88rem;
         }
-        .sec-header .cnt { background:var(--orange); color:#fff; border-radius:20px; padding:1px 9px; font-size:0.7rem; }
+        .sec-header .cnt {
+            background: linear-gradient(135deg, var(--orange), #FF8A65);
+            color: #fff; border-radius: 20px;
+            padding: 2px 10px; font-size: 0.68rem; font-weight: 700;
+            box-shadow: 0 2px 8px rgba(255,87,34,0.3);
+        }
 
-        /* Tables */
-        .dep-table { border-radius:0 0 6px 6px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem; }
-        .dep-table table { margin:0; }
-        .dep-table thead th { background:var(--blue); color:#fff; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; border:none; padding:0.55rem 0.75rem; white-space:nowrap; }
-        .dep-table tbody tr:hover { background:#EEF2F7; }
-        .dep-table td { font-size:0.79rem; vertical-align:middle; padding:0.5rem 0.75rem; border-color:#e8edf2; }
+        /* ── Tables ── */
+        .dep-table {
+            border-radius: 0 0 12px 12px; overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.07); margin-bottom: 1.5rem;
+            border: 1px solid var(--border); border-top: none;
+        }
+        .dep-table table { margin: 0; }
+        .dep-table thead th {
+            background: var(--blue); color: #fff; font-size: 0.68rem;
+            text-transform: uppercase; letter-spacing: 0.07em; border: none;
+            padding: 0.6rem 0.85rem; white-space: nowrap;
+            font-family: 'Poppins', sans-serif;
+        }
+        .dep-table tbody tr:hover { background: #F5F8FF; }
+        .dep-table td { font-size: 0.8rem; vertical-align: middle; padding: 0.55rem 0.85rem; border-color: #EEF2F7; }
 
-        /* Time badge */
-        .t { font-family:'Courier New',monospace !important; font-weight:800; font-size:0.83rem; background:var(--navy); color:var(--amber); padding:2px 8px; border-radius:3px; letter-spacing:0.04em; }
-        .t.arr { background:var(--blue); }
+        /* Time badges */
+        .t {
+            font-family: 'Courier New', monospace;
+            font-weight: 800; font-size: 0.82rem;
+            background: var(--navy); color: var(--amber);
+            padding: 3px 9px; border-radius: 6px; letter-spacing: 0.04em;
+        }
+        .t.arr { background: var(--blue); }
 
         /* Route cell */
-        .rc .city { font-weight:800; color:var(--navy); }
-        .rc .via { color:#888; font-size:0.65rem; }
-        .rc .arr-icon { color:var(--orange); font-size:0.72rem; margin:0 0.25rem; }
+        .rc .city { font-weight: 700; color: var(--navy); }
+        .rc .via { color: #888; font-size: 0.65rem; }
+        .rc .arr-icon { color: var(--orange); font-size: 0.72rem; margin: 0 0.25rem; }
 
-        /* Fare / rating */
-        .fare { font-weight:800; color:#2E7D32; }
-        .op-govt { background:#003580; color:#fff; border-radius:3px; padding:1px 6px; font-size:0.67rem; font-weight:700; }
-        .op-pvt  { background:#7B3F00; color:#FFD700; border-radius:3px; padding:1px 6px; font-size:0.67rem; font-weight:700; }
-        .op-train { background:#881600; color:#fff; border-radius:3px; padding:1px 6px; font-size:0.67rem; font-weight:700; }
-        .op-flight { background:#01579B; color:#fff; border-radius:3px; padding:1px 6px; font-size:0.67rem; font-weight:700; }
-        .status-ok  { background:#E8F5E9; color:#2E7D32; border:1px solid #A5D6A7; border-radius:4px; padding:1px 7px; font-size:0.68rem; font-weight:700; }
-        .status-dl  { background:#FFF3E0; color:#E65100; border:1px solid #FFCC80; border-radius:4px; padding:1px 7px; font-size:0.68rem; font-weight:700; }
-        .status-ot  { background:#F3F4F6; color:#6B7280; border:1px solid #D1D5DB; border-radius:4px; padding:1px 7px; font-size:0.68rem; font-weight:700; }
+        /* Fare / operators */
+        .fare { font-weight: 800; color: #2E7D32; }
+        .op-govt   { background: #003580; color: #fff; border-radius: 5px; padding: 2px 7px; font-size: 0.65rem; font-weight: 700; }
+        .op-pvt    { background: #7B3F00; color: #FFD700; border-radius: 5px; padding: 2px 7px; font-size: 0.65rem; font-weight: 700; }
+        .op-train  { background: #881600; color: #fff; border-radius: 5px; padding: 2px 7px; font-size: 0.65rem; font-weight: 700; }
+        .op-flight { background: #01579B; color: #fff; border-radius: 5px; padding: 2px 7px; font-size: 0.65rem; font-weight: 700; }
+        .status-ok { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; border-radius: 6px; padding: 2px 8px; font-size: 0.67rem; font-weight: 700; }
+        .status-dl { background: #FFF3E0; color: #E65100; border: 1px solid #FFCC80; border-radius: 6px; padding: 2px 8px; font-size: 0.67rem; font-weight: 700; }
+        .status-ot { background: #F3F4F6; color: #6B7280; border: 1px solid #D1D5DB; border-radius: 6px; padding: 2px 8px; font-size: 0.67rem; font-weight: 700; }
 
         /* Empty board */
-        .empty-board { background:#111827; border-radius:0 0 6px 6px; text-align:center; padding:2.5rem 1rem; color:rgba(255,255,255,0.35); font-size:0.82rem; }
-        .empty-board i { font-size:2.2rem; display:block; margin-bottom:0.5rem; }
-        .empty-board a { color:var(--amber); }
+        .empty-board {
+            background: #111827; border-radius: 0 0 12px 12px;
+            text-align: center; padding: 3rem 1rem;
+            color: rgba(255,255,255,0.3); font-size: 0.82rem;
+        }
+        .empty-board i { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; opacity: 0.4; }
+        .empty-board a { color: var(--amber); }
 
-        /* ── Road modes (Car / Bike) ── */
+        /* Road cards */
         .road-cards { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
         @media(max-width:500px){ .road-cards { grid-template-columns:1fr; } }
-        .road-card {
-            background:#fff;
-            border-radius:10px;
-            overflow:hidden;
-            box-shadow:0 2px 8px rgba(0,0,0,0.07);
-        }
-        .road-card-header {
-            padding:0.75rem 1rem;
-            display:flex; align-items:center; gap:0.6rem;
-            font-weight:800; font-size:0.95rem;
-        }
-        .road-card-header .rc-icon { font-size:1.8rem; }
-        .road-card-body { padding:0.75rem 1rem 1rem; }
+        .road-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.07); border: 1px solid var(--border); }
+        .road-card-header { padding: 0.85rem 1.1rem; display: flex; align-items: center; gap: 0.6rem; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.95rem; }
+        .road-card-header .rc-icon { font-size: 1.8rem; }
+        .road-card-body { padding: 0.85rem 1.1rem 1.1rem; }
         .road-stat { display:flex; align-items:baseline; gap:0.3rem; margin-bottom:0.35rem; }
-        .road-stat .rs-val { font-size:2rem; font-weight:800; line-height:1; }
+        .road-stat .rs-val { font-family: 'Poppins', sans-serif; font-size:2rem; font-weight:800; line-height:1; }
         .road-stat .rs-unit { font-size:0.78rem; color:#6c757d; }
         .road-sub { font-size:0.75rem; color:#6c757d; margin-bottom:0.5rem; }
-        .road-detail-row { display:flex; justify-content:space-between; font-size:0.76rem; color:#444; padding:0.3rem 0; border-top:1px dashed #e0e4ec; }
+        .road-detail-row { display:flex; justify-content:space-between; font-size:0.76rem; color:#444; padding:0.35rem 0; border-top:1px dashed #e5e9f0; }
         .road-detail-row .label { color:#888; }
         .road-detail-row .value { font-weight:700; color:var(--navy); }
-
-        /* No road info */
-        .road-na { background:#fff; border-radius:6px 6px 6px 6px; text-align:center; padding:2rem 1rem; color:#aaa; font-size:0.82rem; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+        .road-na { background:#fff; border-radius:12px; text-align:center; padding:2.5rem 1rem; color:#aaa; font-size:0.82rem; box-shadow:0 4px 16px rgba(0,0,0,0.06); border:1px solid var(--border); }
 
         /* Book strip */
-        .book-strip { background:#fff; border-radius:6px; padding:0.85rem 1rem; box-shadow:0 2px 8px rgba(0,0,0,0.06); margin-bottom:1.5rem; }
+        .book-strip {
+            background: #fff; border-radius: 12px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
 
-        footer { background:#0a1628; color:rgba(255,255,255,0.5); padding:0.85rem 0; margin-top:auto; font-size:0.72rem; text-align:center; }
-        footer .fb { color:var(--amber); font-weight:700; }
+        /* Footer */
+        footer { background: var(--deep); color: rgba(255,255,255,0.4); padding: 1rem 0; margin-top: auto; font-size: 0.72rem; text-align: center; }
+        footer .fb { color: var(--amber); font-weight: 700; font-family: 'Poppins', sans-serif; }
+        footer a { color: rgba(255,200,0,0.7); text-decoration: none; }
 
+        /* Google translate */
         #google_translate_element { display:none; }
         .goog-te-banner-frame, #goog-te-banner-frame { display:none !important; }
         body { top:0 !important; }
@@ -157,24 +265,27 @@
 <!-- Ticker -->
 <div class="ticker-bar">
     <span class="ticker-inner">
-        &nbsp;🚌 Bus &nbsp;🚂 Train &nbsp;✈️ Flight &nbsp;🚗 Car &nbsp;🏍️ Bike – All travel options in one place &nbsp;|&nbsp;
-        Yatra Saarthi – Smart Transport Portal &nbsp;|&nbsp; Enter origin &amp; destination to compare all modes &nbsp;&nbsp;
+        &nbsp;&nbsp;🚌 Bus &nbsp;|&nbsp; 🚂 Train (Live IRCTC) &nbsp;|&nbsp; ✈️ Flight (Live AviationStack) &nbsp;|&nbsp; 🚗 Car &nbsp;|&nbsp; 🏍️ Bike – All travel modes compared in one search &nbsp;|&nbsp;
+        Yatra Saarthi – India's Smart Travel Portal &nbsp;|&nbsp; Tamil Nadu · Karnataka · Andhra Pradesh covered &nbsp;&nbsp;
     </span>
 </div>
 
 <!-- Navbar -->
 <nav class="main-nav">
     <a class="nav-brand" href="{{ url_for('passengers_home') }}">
-        <div class="bus-pill"><i class="bi bi-bus-front-fill"></i> Yatra</div>
-        <span class="site-name">Saarthi</span>
+        <div class="brand-logo"><i class="bi bi-compass-fill" style="color:#fff;"></i></div>
+        <div class="brand-text">
+            <span class="brand-title">Yatra Saarthi</span>
+            <span class="brand-sub">Smart Travel Portal</span>
+        </div>
     </a>
     <div class="nav-links">
         <a href="{{ url_for('passengers_home') }}"><i class="bi bi-house-fill"></i> Home</a>
-        <a href="{{ url_for('passenger_timetables') }}" class="active"><i class="bi bi-clock-history"></i> Travel Options</a>
+        <a href="{{ url_for('passenger_timetables') }}" class="active"><i class="bi bi-map-fill"></i> Plan Trip</a>
         <a href="{{ url_for('weather_page') }}"><i class="bi bi-cloud-sun-fill"></i> Weather</a>
         <a href="{{ url_for('train_map') }}"><i class="bi bi-train-front-fill"></i> Train Map</a>
         <a href="{{ url_for('tourism_page') }}"><i class="bi bi-camera-fill"></i> Tourism</a>
-        <a href="{{ url_for('passengers_plan') }}"><i class="bi bi-compass-fill"></i> Plan Trip</a>
+        <a href="{{ url_for('travel_guide') }}"><i class="bi bi-journal-richtext"></i> Guide</a>
         <div class="lang-btns">
             <button id="lang-en" onclick="switchLang('en')" class="active">EN</button>
             <button id="lang-ta" onclick="switchLang('ta')">தமிழ்</button>
@@ -186,30 +297,63 @@
 
 <!-- Page header -->
 <div class="page-header">
-    <div class="container">
+    <div class="container ph-content">
+        <div class="ph-crumbs">
+            <a href="{{ url_for('passengers_home') }}">Home</a>
+            <span>›</span>
+            <span>Plan Your Trip</span>
+        </div>
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div>
                 <h2><i class="bi bi-signpost-split-fill me-2" style="color:var(--amber);"></i>All Travel Options</h2>
-                <p>Compare Bus · Train · Flight · Car · Bike for your journey</p>
+                <p>Compare Bus · Train · Flight · Car · Bike for your journey from <strong style="color:rgba(255,255,255,0.8);">{{ origin or 'Origin' }}</strong> to <strong style="color:rgba(255,255,255,0.8);">{{ destination or 'Destination' }}</strong></p>
             </div>
-            <span id="liveClock" style="font-family:'Courier New',monospace;font-size:1.4rem;color:var(--amber);font-weight:800;letter-spacing:0.1em;"></span>
+            <span id="liveClock" style="font-family:'Courier New',monospace;font-size:1.5rem;color:var(--amber);font-weight:800;letter-spacing:0.1em;background:rgba(255,179,0,0.1);padding:6px 16px;border-radius:10px;border:1px solid rgba(255,179,0,0.2);"></span>
         </div>
     </div>
 </div>
 
+<!-- Autocomplete Styles -->
+<style>
+.ac-wrap { position:relative; }
+.ac-dropdown {
+    position:absolute; top:100%; left:0; right:0; z-index:9999;
+    background:#fff; border:1.5px solid #E65100; border-top:none;
+    border-radius:0 0 10px 10px; box-shadow:0 8px 24px rgba(0,0,0,0.12);
+    max-height:260px; overflow-y:auto; display:none;
+}
+.ac-dropdown.show { display:block; }
+.ac-item {
+    padding:8px 14px; cursor:pointer; font-size:0.83rem;
+    display:flex; align-items:center; gap:8px; border-bottom:1px solid #f5f5f5;
+    transition:background 0.12s;
+}
+.ac-item:hover, .ac-item.active { background:#FFF3E0; }
+.ac-item .ac-name { font-weight:600; color:#1a1a1a; }
+.ac-item .ac-state { color:#888; font-size:0.72rem; }
+.ac-item .ac-icon { font-size:0.9rem; flex-shrink:0; }
+.ac-loading { padding:10px 14px; color:#aaa; font-size:0.78rem; text-align:center; }
+</style>
+
 <!-- Search -->
 <div class="search-panel">
     <div class="container">
-        <form method="GET" class="row g-3 align-items-end">
+        <form method="GET" id="searchForm" class="row g-3 align-items-end">
             <div class="col-md-4">
                 <label><i class="bi bi-geo-alt-fill" style="color:var(--orange);"></i> From</label>
-                <input type="text" class="form-control" name="origin" value="{{ origin }}"
-                       placeholder="e.g. Madurai" list="citiesList" autocomplete="off">
+                <div class="ac-wrap">
+                    <input type="text" class="form-control" id="originInput" name="origin" value="{{ origin }}"
+                           placeholder="Type city or village…" autocomplete="off">
+                    <div class="ac-dropdown" id="originDropdown"></div>
+                </div>
             </div>
             <div class="col-md-4">
                 <label><i class="bi bi-geo-alt" style="color:#2E7D32;"></i> To</label>
-                <input type="text" class="form-control" name="destination" value="{{ destination }}"
-                       placeholder="e.g. Chennai" list="citiesList" autocomplete="off">
+                <div class="ac-wrap">
+                    <input type="text" class="form-control" id="destinationInput" name="destination" value="{{ destination }}"
+                           placeholder="Type city or village…" autocomplete="off">
+                    <div class="ac-dropdown" id="destinationDropdown"></div>
+                </div>
             </div>
             <div class="col-md-4 d-flex gap-2 align-items-end">
                 <button type="submit" class="btn-search flex-grow-1">
@@ -220,11 +364,172 @@
                 {% endif %}
             </div>
         </form>
-        <datalist id="citiesList">
-            {% for city in all_cities %}<option value="{{ city }}">{% endfor %}
-        </datalist>
     </div>
 </div>
+
+<script>
+/* ═══════════════════════════════════════
+   CITY / VILLAGE AUTOCOMPLETE
+   Uses OpenStreetMap Nominatim (free, no key)
+═══════════════════════════════════════ */
+(function(){
+    const DEBOUNCE_MS = 350;
+    const MIN_CHARS   = 2;
+
+    /* State Abbreviation lookup */
+    const STATE_ABBR = {
+        'Tamil Nadu':'TN', 'Karnataka':'KA', 'Kerala':'KL',
+        'Andhra Pradesh':'AP', 'Telangana':'TS', 'Maharashtra':'MH',
+        'Gujarat':'GJ', 'Rajasthan':'RJ', 'Uttar Pradesh':'UP',
+        'Madhya Pradesh':'MP', 'West Bengal':'WB', 'Bihar':'BR',
+        'Odisha':'OD', 'Punjab':'PB', 'Haryana':'HR',
+        'Himachal Pradesh':'HP', 'Uttarakhand':'UK', 'Jharkhand':'JH',
+        'Chhattisgarh':'CG', 'Assam':'AS', 'Delhi':'DL',
+        'Goa':'GA', 'Sikkim':'SK', 'Tripura':'TR', 'Manipur':'MN',
+        'Meghalaya':'ML', 'Nagaland':'NL', 'Mizoram':'MZ',
+        'Arunachal Pradesh':'AR', 'Jammu and Kashmir':'JK',
+        'Ladakh':'LA', 'Puducherry':'PY',
+    };
+
+    function getStateLabel(addressObj){
+        const state = addressObj.state || '';
+        return STATE_ABBR[state] || state.substring(0,12) || '';
+    }
+
+    function getPlaceIcon(type, cls){
+        if(cls==='boundary' || type==='administrative') return '🏙️';
+        if(type==='city' || type==='town') return '🏙️';
+        if(type==='village' || type==='hamlet') return '🏘️';
+        if(type==='suburb' || type==='neighbourhood') return '📍';
+        if(type==='railway' || cls==='railway') return '🚉';
+        return '📌';
+    }
+
+    let _timers = {};
+    let _cache  = {};
+    let _active = {}; // currently highlighted index per field
+
+    function setupAutocomplete(inputId, dropdownId){
+        const input    = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        if(!input || !dropdown) return;
+
+        _active[inputId] = -1;
+
+        input.addEventListener('input', function(){
+            const val = this.value.trim();
+            clearTimeout(_timers[inputId]);
+            if(val.length < MIN_CHARS){ closeDropdown(dropdown); return; }
+            _timers[inputId] = setTimeout(()=> fetchSuggestions(val, input, dropdown, inputId), DEBOUNCE_MS);
+        });
+
+        input.addEventListener('keydown', function(e){
+            const items = dropdown.querySelectorAll('.ac-item');
+            if(!items.length) return;
+            if(e.key==='ArrowDown'){
+                e.preventDefault();
+                _active[inputId] = Math.min(_active[inputId]+1, items.length-1);
+                highlightItem(items, _active[inputId]);
+            } else if(e.key==='ArrowUp'){
+                e.preventDefault();
+                _active[inputId] = Math.max(_active[inputId]-1, -1);
+                highlightItem(items, _active[inputId]);
+            } else if(e.key==='Enter' && _active[inputId] >= 0){
+                e.preventDefault();
+                items[_active[inputId]].click();
+            } else if(e.key==='Escape'){
+                closeDropdown(dropdown);
+            }
+        });
+
+        document.addEventListener('click', function(e){
+            if(!input.contains(e.target) && !dropdown.contains(e.target))
+                closeDropdown(dropdown);
+        });
+    }
+
+    function highlightItem(items, idx){
+        items.forEach((el,i)=> el.classList.toggle('active', i===idx));
+        if(idx>=0) items[idx].scrollIntoView({block:'nearest'});
+    }
+
+    function closeDropdown(dropdown){
+        dropdown.classList.remove('show');
+        dropdown.innerHTML='';
+    }
+
+    function fetchSuggestions(query, input, dropdown, inputId){
+        if(_cache[query]){
+            renderSuggestions(_cache[query], input, dropdown, inputId); return;
+        }
+        dropdown.innerHTML='<div class="ac-loading"><span class="spinner" style="border-top-color:#E65100;width:14px;height:14px;"></span> Searching…</div>';
+        dropdown.classList.add('show');
+
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&limit=10&format=json&addressdetails=1&featuretype=city,town,village,hamlet`;
+
+        fetch(url, { headers:{'Accept-Language':'en'} })
+        .then(r=>r.json())
+        .then(results=>{
+            _cache[query] = results;
+            renderSuggestions(results, input, dropdown, inputId);
+        })
+        .catch(()=>{
+            dropdown.innerHTML='<div class="ac-loading" style="color:#c00;">⚠️ Could not fetch suggestions</div>';
+        });
+    }
+
+    function renderSuggestions(results, input, dropdown, inputId){
+        _active[inputId] = -1;
+        if(!results || !results.length){
+            dropdown.innerHTML='<div class="ac-loading">No places found in India</div>';
+            dropdown.classList.add('show');
+            return;
+        }
+
+        /* Deduplicate by display name */
+        const seen = new Set();
+        const filtered = results.filter(r=>{
+            const key = (r.address.city||r.address.town||r.address.village||r.address.hamlet||r.display_name.split(',')[0]).toLowerCase();
+            if(seen.has(key)) return false;
+            seen.add(key); return true;
+        });
+
+        dropdown.innerHTML = filtered.map((r,i)=>{
+            const placeName = r.address.city || r.address.town || r.address.village ||
+                              r.address.hamlet || r.address.suburb || r.display_name.split(',')[0];
+            const state = getStateLabel(r.address);
+            const dist  = r.address.county || r.address.state_district || '';
+            const icon  = getPlaceIcon(r.type, r.class);
+            const label = dist && dist!==placeName ? `${dist}, ${state}` : state;
+            return `<div class="ac-item" data-value="${placeName}" data-idx="${i}">
+                <span class="ac-icon">${icon}</span>
+                <div>
+                    <div class="ac-name">${placeName}</div>
+                    <div class="ac-state">${label}</div>
+                </div>
+            </div>`;
+        }).join('');
+
+        dropdown.classList.add('show');
+
+        dropdown.querySelectorAll('.ac-item').forEach(item=>{
+            item.addEventListener('mouseenter', function(){
+                _active[inputId] = parseInt(this.dataset.idx);
+                dropdown.querySelectorAll('.ac-item').forEach((el,i)=>el.classList.toggle('active',i===_active[inputId]));
+            });
+            item.addEventListener('click', function(){
+                input.value = this.dataset.value;
+                closeDropdown(dropdown);
+                input.focus();
+            });
+        });
+    }
+
+    /* Init both fields */
+    setupAutocomplete('originInput',      'originDropdown');
+    setupAutocomplete('destinationInput', 'destinationDropdown');
+})();
+</script>
 
 <div class="container flex-grow-1 pb-4">
 
@@ -258,12 +563,17 @@
     </div>
 
     <!-- Result summary banner -->
-    <div class="alert mb-3 py-2" style="background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:0.8rem;">
-        <i class="bi bi-signpost-split-fill me-2" style="color:var(--amber);"></i>
-        Showing all travel options from <strong>{{ origin }}</strong> to <strong>{{ destination }}</strong>
-        &nbsp;—&nbsp;
-        <strong style="color:var(--amber);">{{ local_buses|length + private_buses|length + trains|length + flights|length }}</strong> scheduled services found
-        {% if road_info %}&nbsp;+&nbsp; road travel estimates{% endif %}
+    <div class="mb-3 py-3 px-4" style="background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border-radius:14px;font-size:0.82rem;box-shadow:0 4px 16px rgba(11,31,58,0.2);display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <i class="bi bi-signpost-split-fill" style="color:var(--amber);font-size:1.3rem;flex-shrink:0;"></i>
+        <div>
+            <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:0.88rem;">
+                {{ origin }} <span style="color:var(--orange);">→</span> {{ destination }}
+            </div>
+            <div style="color:rgba(255,255,255,0.55);font-size:0.75rem;margin-top:1px;">
+                <strong style="color:var(--amber);">{{ local_buses|length + private_buses|length + trains|length + flights|length }}</strong> scheduled services found
+                {% if road_info %}· Road estimates available{% endif %}
+            </div>
+        </div>
     </div>
     {% endif %}
 
@@ -391,13 +701,8 @@
         <div id="trainStationBar" style="display:none;background:#FFEBEE;border-left:4px solid #881600;padding:0.6rem 1rem;font-size:0.78rem;color:#881600;"></div>
         {% endif %}
 
-        <!-- Nearby stations for origin + destination (shown only when no direct station) -->
-        {% if origin and destination %}
-        <div id="nearbyTrainAlerts" style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
-            <div id="nearbyStationOrigin"></div>
-            <div id="nearbyStationDest"></div>
-        </div>
-        {% endif %}
+        <!-- Boarding-station notice (auto-filled by JS when nearest station is used) -->
+        <div id="boardingNotice" style="display:none;"></div>
 
         <!-- Live IRCTC result — all trains fetched from erail.in API -->
         <div id="liveTrainsResult">
@@ -634,8 +939,8 @@
 </div>
 
 <footer>
-    <span class="fb">Yatra Saarthi</span> &nbsp;|&nbsp;
-    Designed by <strong style="color:var(--amber);">Nextlinkers</strong> | Design Build Operate | KARE
+    <span class="fb">Yatra Saarthi</span> &nbsp;·&nbsp;
+    Designed by <a href="#">Nextlinkers</a> &nbsp;·&nbsp; Design Build Operate &nbsp;·&nbsp; <a href="#">KARE University</a>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -740,7 +1045,18 @@ function loadNearbyAirportsPanel(cityName, boxId, usedCode){
     .catch(()=>{ box.innerHTML=''; });
 }
 
-function loadNearbyStationsPanel(cityName, boxId, usedCode){
+/* ── helpers for road-to-station estimates ── */
+function roadTime(km, speedKmh){
+    const totalMins = Math.round(km / speedKmh * 60);
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m} min`;
+}
+function fuelCost(km, kmPerLitre, pricePerLitre){
+    return '₹' + Math.round(km / kmPerLitre * pricePerLitre);
+}
+
+function loadNearbyStationsPanel(cityName, boxId, usedCode, noTrainsFound){
     const box = document.getElementById(boxId);
     if(!box || !cityName) return;
     const isOriginBox = boxId === 'nearbyStationOrigin';
@@ -750,50 +1066,118 @@ function loadNearbyStationsPanel(cityName, boxId, usedCode){
     .then(r=>r.json())
     .then(data=>{
         if(!data.stations || !data.stations.length){
-            box.innerHTML = `<div style="padding:0.6rem 1rem;font-size:0.78rem;background:#FFF8E1;border-left:4px solid #F9A825;">
-                ⚠️ No stations found within 150 km of <strong>${cityName}</strong>.
+            box.innerHTML = `<div style="padding:0.75rem 1rem;font-size:0.82rem;background:#FFF8E1;border-left:4px solid #F9A825;border-radius:0 8px 8px 0;">
+                ⚠️ No railway stations found within 150 km of <strong>${cityName}</strong>.
             </div>`;
             return;
         }
 
-        const hasDirectStation = data.stations.some(s => s.code === usedCode);
-        const borderColor = hasDirectStation ? '#881600' : '#F9A825';
-        const bgColor     = hasDirectStation ? '#FFEBEE' : '#FFF8E1';
+        /* If nearest station was used but returned 0 trains → force prominent mode */
+        const hasDirectStation = !noTrainsFound && data.stations.some(s => s.code === usedCode);
 
-        let html = `<div style="background:${bgColor};border-left:4px solid ${borderColor};padding:0.75rem 1rem;font-size:0.8rem;">`;
+        let html = '';
 
         if(!hasDirectStation){
-            const nearest = data.stations[0];
-            html += `<div class="fw-bold mb-1" style="color:#E65100;">
-                ⚠️ No direct station in <strong>${cityName}</strong> — nearest: 
-                <strong>${nearest.code}</strong> ${nearest.name} (${nearest.distance_km} km)
-            </div>
-            <div style="font-size:0.73rem;color:#888;margin-bottom:0.5rem;">
-                Showing trains from <strong>${nearest.code}</strong>. You can also pick another station below:
-            </div>`;
+            /* ── NO DIRECT STATION: show prominent "how to reach" cards ── */
+            html += `<div style="background:#FFF3E0;border-left:4px solid #E65100;border-radius:0 0 0 0;padding:0.85rem 1.1rem;">
+                <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:0.85rem;color:#BF360C;margin-bottom:0.75rem;">
+                    ⚠️ No direct railway station in <strong>${cityName}</strong>
+                    — here's how to reach the nearest station by road:
+                </div>`;
+
+            /* Show top 3 nearest stations with road-to-station travel cards */
+            data.stations.slice(0, 3).forEach((st, idx) => {
+                const isUsed  = idx === 0;
+                const dist    = parseFloat(st.distance_km);
+                const carTime = roadTime(dist, 60);
+                const bikTime = roadTime(dist, 35);
+                const carFuel = fuelCost(dist, 15, 102);   // car: 15 km/l, ₹102/l petrol
+                const bikFuel = fuelCost(dist, 45, 102);   // bike: 45 km/l
+                const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(cityName)}/${encodeURIComponent(st.name+' Railway Station')}`;
+                const role    = isOriginBox ? 'origin' : 'dest';
+
+                html += `
+                <div style="background:#fff;border:1.5px solid ${isUsed?'#E65100':'#e0e4ec'};border-radius:12px;padding:0.85rem 1rem;margin-bottom:0.6rem;">
+                    <!-- Station name row -->
+                    <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.6rem;flex-wrap:wrap;">
+                        <span style="font-family:monospace;font-weight:800;font-size:1rem;background:${isUsed?'#881600':'#FFEBEE'};color:${isUsed?'#fff':'#881600'};padding:3px 10px;border-radius:6px;">
+                            ${st.code}
+                        </span>
+                        <span style="font-weight:700;font-size:0.85rem;color:#1a1a2e;">${st.name}</span>
+                        <span style="font-size:0.72rem;color:#888;margin-left:auto;">${dist} km from ${cityName}</span>
+                        ${isUsed ? `<span style="background:#E8F5E9;color:#2E7D32;border-radius:6px;padding:1px 8px;font-size:0.65rem;font-weight:700;">Nearest</span>` : ''}
+                    </div>
+
+                    <!-- Road travel cards -->
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.6rem;">
+                        <!-- Car -->
+                        <div style="background:#E8F5E9;border-radius:8px;padding:0.6rem 0.8rem;display:flex;align-items:center;gap:0.6rem;">
+                            <span style="font-size:1.4rem;">🚗</span>
+                            <div>
+                                <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:1rem;color:#2E7D32;line-height:1;">${carTime}</div>
+                                <div style="font-size:0.65rem;color:#555;margin-top:1px;">by Car &nbsp;·&nbsp; ${carFuel} fuel</div>
+                            </div>
+                        </div>
+                        <!-- Bike -->
+                        <div style="background:#FFF8E1;border-radius:8px;padding:0.6rem 0.8rem;display:flex;align-items:center;gap:0.6rem;">
+                            <span style="font-size:1.4rem;">🏍️</span>
+                            <div>
+                                <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:1rem;color:#E65100;line-height:1;">${bikTime}</div>
+                                <div style="font-size:0.65rem;color:#555;margin-top:1px;">by Bike &nbsp;·&nbsp; ${bikFuel} fuel</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <button onclick="swapStationAndReload('${st.code}','${st.name}','${role}')"
+                            style="background:#881600;color:#fff;border:none;border-radius:7px;padding:5px 14px;font-size:0.75rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                            🚂 See Trains from ${st.code}
+                        </button>
+                        <a href="${mapsUrl}" target="_blank"
+                            style="background:#1565C0;color:#fff;border-radius:7px;padding:5px 14px;font-size:0.75rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                            📍 Directions
+                        </a>
+                    </div>
+                </div>`;
+            });
+
+            html += `</div>`;
+
         } else {
-            html += `<div class="fw-bold mb-2" style="color:#881600;">🚂 Stations near <strong>${cityName}</strong>:</div>`;
+            /* ── DIRECT STATION EXISTS: compact list with road info ── */
+            html += `<div style="background:#FFEBEE;border-left:4px solid #881600;padding:0.75rem 1.1rem;font-size:0.8rem;">
+                <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:0.82rem;color:#881600;margin-bottom:0.6rem;">
+                    🚂 Stations near <strong>${cityName}</strong>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">`;
+
+            data.stations.forEach(st => {
+                const isUsed  = st.code === usedCode;
+                const dist    = parseFloat(st.distance_km);
+                const carTime = roadTime(dist, 60);
+                const bikTime = roadTime(dist, 35);
+                const mapsUrl = `https://www.google.com/maps/dir/${encodeURIComponent(cityName)}/${encodeURIComponent(st.name+' Railway Station')}`;
+                const role    = isOriginBox ? 'origin' : 'dest';
+
+                html += `<div style="${isUsed?'background:#881600;color:#fff;':'background:#fff;color:#333;border:1px solid #FFCDD2;'}
+                    border-radius:8px;padding:5px 10px;font-size:0.75rem;display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap;">
+                    <span style="font-family:monospace;font-weight:800;">${st.code}</span>
+                    <span>${st.name}</span>
+                    <span style="opacity:0.7;font-size:0.68rem;white-space:nowrap;">· ${dist} km · 🚗 ${carTime} · 🏍️ ${bikTime}</span>
+                    ${!isUsed
+                        ? `<button onclick="swapStationAndReload('${st.code}','${st.name}','${role}')"
+                            style="background:#881600;color:#fff;border:none;border-radius:5px;padding:1px 7px;font-size:0.65rem;cursor:pointer;">
+                            🚂 Trains
+                          </button>`
+                        : `<span style="font-size:0.65rem;opacity:0.8;">✓ active</span>`}
+                    <a href="${mapsUrl}" target="_blank" style="color:${isUsed?'#FFCDD2':'#881600'};font-size:0.65rem;">📍</a>
+                </div>`;
+            });
+
+            html += `</div></div>`;
         }
 
-        html += `<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">`;
-        data.stations.forEach(st => {
-            const isUsed = st.code === usedCode || (!usedCode && st === data.stations[0]);
-            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(st.name+' railway station')}`;
-            const role = isOriginBox ? 'origin' : 'dest';
-
-            html += `<div style="${isUsed ? 'background:#881600;color:#fff;' : 'background:#fff;color:#333;border:1px solid #FFCDD2;'}
-                border-radius:8px;padding:5px 10px;font-size:0.75rem;display:inline-flex;align-items:center;gap:6px;flex-wrap:nowrap;">
-                <span style="font-family:monospace;font-weight:800;">${st.code}</span>
-                <span>${st.name}</span>
-                <span style="opacity:0.7;white-space:nowrap;">· ${st.distance_km} km</span>
-                ${!isUsed ? `<button onclick="swapStationAndReload('${st.code}','${st.name}','${role}')"
-                    style="background:#881600;color:#fff;border:none;border-radius:5px;padding:1px 7px;font-size:0.65rem;cursor:pointer;white-space:nowrap;">
-                    🚂 Trains
-                </button>` : `<span style="font-size:0.65rem;opacity:0.8;">✓ active</span>`}
-                <a href="${mapsUrl}" target="_blank" style="color:${isUsed?'#FFCDD2':'#881600'};font-size:0.65rem;">📍</a>
-            </div>`;
-        });
-        html += `</div></div>`;
         box.innerHTML = html;
     })
     .catch(()=>{ box.innerHTML=''; });
@@ -847,21 +1231,44 @@ function renderTrainResults(data, resultDiv, origin, destination){
     if(emptyEl) emptyEl.style.display='none';
 
     if(!data.trains || !data.trains.length){
-        resultDiv.innerHTML=`<div style="background:#1A0A0A;border-radius:0 0 6px 6px;text-align:center;padding:2rem;color:rgba(255,255,255,0.4);font-size:0.82rem;">
-            🚂 &nbsp;No trains found for this route on ${data.date||'today'}.
-            <br><a href="https://www.irctc.co.in/nget/train-search" target="_blank" style="color:#FFA000;">Search on IRCTC →</a>
+        resultDiv.innerHTML=`<div style="background:#1A0A0A;border-radius:0 0 6px 6px;text-align:center;padding:2rem 1.5rem;">
+            <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-bottom:0.75rem;">
+                🚂 &nbsp;No direct trains found from <strong style="color:#FFA000;">${data.from_code||'—'}</strong> to <strong style="color:#FFA000;">${data.to_code||'—'}</strong> on ${data.date||'today'}.
+            </div>
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:1rem;">
+                Try a nearby station below, or check IRCTC directly.
+            </div>
+            <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+                <a href="https://www.irctc.co.in/nget/train-search" target="_blank"
+                   style="background:#881600;color:#fff;border-radius:7px;padding:6px 14px;font-size:0.78rem;font-weight:700;text-decoration:none;">
+                    🚂 Search on IRCTC →
+                </a>
+                <a href="#sec-car"
+                   style="background:#2E7D32;color:#fff;border-radius:7px;padding:6px 14px;font-size:0.78rem;font-weight:700;text-decoration:none;">
+                    🚗 See Car / Bike Options ↓
+                </a>
+            </div>
         </div>`;
         return;
     }
 
+    const boardStn  = data.from_code || '';
+    const boardName = data.from_name || boardStn;
+    const destStn   = data.to_code   || '';
+
     let html=`<div style="background:#fff;border-radius:0 0 6px 6px;padding:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-    <div class="fw-bold mb-2" style="font-size:0.75rem;color:#881600;text-transform:uppercase;letter-spacing:0.05em;">
-        ⚡ ${data.count} train(s) found — ${data.date||'today'}
+    <div style="font-size:0.78rem;color:#881600;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">
+        ⚡ ${data.count} train(s) available — ${data.date||'today'}
+        <span style="font-weight:400;color:#555;text-transform:none;letter-spacing:0;margin-left:0.5rem;">
+            Board at <strong>${boardStn}</strong> · ${boardName}
+        </span>
     </div>
     <div class="table-responsive">
     <table class="table table-hover mb-0" style="font-size:0.8rem;">
     <thead style="background:#881600;color:#fff;"><tr>
-        <th>Train No.</th><th>Train Name</th><th>Type</th><th>Departs</th><th>Arrives</th>
+        <th>Train No.</th><th>Train Name</th><th>Type</th>
+        <th>Departs<br><small style="font-weight:400;opacity:0.8;">from ${boardStn}</small></th>
+        <th>Arrives<br><small style="font-weight:400;opacity:0.8;">at ${destStn}</small></th>
         <th>Duration</th><th>Classes</th><th>Runs On</th><th>Book</th>
     </tr></thead><tbody>`;
 
@@ -869,9 +1276,13 @@ function renderTrainResults(data, resultDiv, origin, destination){
         const days    = Array.isArray(t.run_days) ? t.run_days.join(', ') : (t.run_days||'Daily');
         const classes = Array.isArray(t.classes)  ? t.classes.join(' · ') : (t.classes||'');
         const ttype   = t.train_type ? `<span style="font-size:0.65rem;background:#FFEBEE;color:#881600;border-radius:3px;padding:1px 5px;">${t.train_type}</span>` : '';
+        /* Show train's actual origin only when it differs from boarding station */
+        const originNote = (t.train_origin_code && t.train_origin_code !== boardStn)
+            ? `<br><small style="color:#aaa;font-size:0.65rem;">Originates from ${t.train_origin_code}</small>`
+            : '';
         html+=`<tr>
             <td><span class="op-train">${t.number}</span></td>
-            <td><strong>${t.name}</strong>${t.distance?`<br><small style="color:#aaa;">${t.distance} km</small>`:''}</td>
+            <td><strong>${t.name}</strong>${originNote}${t.distance?`<br><small style="color:#aaa;">${t.distance} km</small>`:''}</td>
             <td>${ttype}</td>
             <td><span class="t" style="background:#881600;">${t.dep_time||'--:--'}</span></td>
             <td><span class="t" style="background:#5D1010;">${t.arr_time||'--:--'}</span></td>
@@ -914,30 +1325,24 @@ function loadLiveTrains(){
     .then(data=>{
         if(btn){ btn.disabled=false; }
 
-        // Show station info bar only when direct stations are found
-        if(stationBar && data.from_code && data.to_code){
-            const fromLabel = data.from_nearest_used
-                ? `<strong>${data.from_code}</strong> ${data.from_name} <span style="background:#FFF3E0;color:#E65100;border-radius:4px;padding:1px 6px;font-size:0.7rem;">📍 nearest to ${data.origin_city}</span>`
-                : `<strong>${data.from_code}</strong> ${data.from_name}`;
-            const toLabel = data.to_nearest_used
-                ? `<strong>${data.to_code}</strong> ${data.to_name} <span style="background:#FFF3E0;color:#E65100;border-radius:4px;padding:1px 6px;font-size:0.7rem;">📍 nearest to ${data.dest_city}</span>`
-                : `<strong>${data.to_code}</strong> ${data.to_name}`;
-            stationBar.innerHTML = `🚂 &nbsp;${fromLabel} &nbsp;→&nbsp; ${toLabel}`;
-            stationBar.style.display = 'block';
-        }
-
-        // Show nearby stations ONLY if direct station was not found for that city
-        const originStBox = document.getElementById('nearbyStationOrigin');
-        const destStBox   = document.getElementById('nearbyStationDest');
-        if(data.from_nearest_used){
-            loadNearbyStationsPanel(data.origin_city || origin, 'nearbyStationOrigin', data.from_code);
-        } else if(originStBox){
-            originStBox.innerHTML = '';   // direct station found — hide panel
-        }
-        if(data.to_nearest_used){
-            loadNearbyStationsPanel(data.dest_city || destination, 'nearbyStationDest', data.to_code);
-        } else if(destStBox){
-            destStBox.innerHTML = '';     // direct station found — hide panel
+        // Station info bar — show which station is being used
+        const boardingNotice = document.getElementById('boardingNotice');
+        if(data.from_code && data.to_code){
+            const distTag = data.from_nearest_dist
+                ? ` &nbsp;<span style="background:#FFF3E0;color:#E65100;border-radius:4px;padding:1px 6px;font-size:0.7rem;">📍 ${data.from_nearest_dist} km from ${data.origin_city}</span>`
+                : '';
+            if(stationBar){
+                stationBar.innerHTML = `🚂 &nbsp;<strong>${data.from_code}</strong> ${data.from_name}${distTag} &nbsp;→&nbsp; <strong>${data.to_code}</strong> ${data.to_name}`;
+                stationBar.style.display = 'block';
+            }
+            if(boardingNotice && data.from_nearest_used){
+                boardingNotice.style.display = 'block';
+                boardingNotice.innerHTML = `<div style="background:#E3F2FD;border-left:4px solid #1565C0;padding:0.6rem 1rem;font-size:0.8rem;color:#0D47A1;margin-bottom:0.25rem;">
+                    🚉 &nbsp;No direct station in <strong>${data.origin_city}</strong> — showing trains from nearest station &nbsp;<strong>${data.from_code} · ${data.from_name}</strong>&nbsp; (${data.from_nearest_dist} km away). Depart times below are from <strong>${data.from_code}</strong>.
+                </div>`;
+            } else if(boardingNotice){
+                boardingNotice.style.display = 'none';
+            }
         }
 
         if(data.status==='no_key'){
@@ -967,8 +1372,6 @@ function loadLiveTrains(){
                 ⚠️ ${data.message}
                 <br><a href="https://www.irctc.co.in/nget/train-search" target="_blank" style="color:#881600;font-weight:700;">Search on IRCTC.co.in →</a>
             </div>`;
-            if(!data.from_code) loadNearbyStationsPanel(origin,       'nearbyStationOrigin', null);
-            if(!data.to_code)   loadNearbyStationsPanel(destination,  'nearbyStationDest',   null);
             return;
         }
 

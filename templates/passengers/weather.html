@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Google Translate -->
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateInit" async></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        * { font-family: Verdana, Geneva, Tahoma, sans-serif !important; }
+        body, * { font-family: 'Inter', sans-serif; }
+        h1,h2,h3,h4,h5,.fw-bold { font-family: 'Poppins', sans-serif; }
         body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             background-attachment: fixed;
@@ -125,41 +127,37 @@
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('passengers_home') }}">
-            <i class="bi bi-bus-front"></i> Yatra Saarthi
-        </a>
-        <!-- Language buttons always visible, never collapse -->
-        <div class="btn-group ms-auto me-2 flex-shrink-0">
-            <button class="btn btn-warning btn-sm active" id="lang-en" onclick="switchLang('en')">
-                <i class="bi bi-translate"></i> EN
-            </button>
-            <button class="btn btn-outline-warning btn-sm" id="lang-ta" onclick="switchLang('ta')">
-                தமிழ்
-            </button>
-            <button class="btn btn-outline-warning btn-sm" id="lang-te" onclick="switchLang('te')">
-                తెలుగు
-            </button>
-        </div>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navWeather">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navWeather">
-            <div class="ms-auto d-flex gap-2 align-items-center">
-                <a href="{{ url_for('passengers_plan') }}" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-compass"></i> Plan Trip
-                </a>
-                <a href="{{ url_for('train_map') }}" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-train-front"></i> Train Map
-                </a>
-                <a href="{{ url_for('tourism_page') }}" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-camera"></i> Tourism
-                </a>
-                <a href="{{ url_for('passenger_timetables') }}" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-clock-history"></i> Timetable
-                </a>
-            </div>
+<style>
+.ys-nav { background: rgba(11,31,58,0.97); backdrop-filter: blur(12px); padding: 0 2rem; height: 64px; display: flex; align-items: center; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+.ys-brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; flex-shrink: 0; }
+.ys-logo { width:38px;height:38px;background:linear-gradient(135deg,#FF5722,#FF8A65);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 4px 12px rgba(255,87,34,0.4); }
+.ys-bt { display:flex;flex-direction:column;line-height:1.1; }
+.ys-bt .t1 { font-family:'Poppins',sans-serif;font-weight:800;font-size:1rem;color:#fff; }
+.ys-bt .t2 { font-size:0.58rem;color:#FFB300;font-weight:500;letter-spacing:0.08em;text-transform:uppercase; }
+.ys-links { display:flex;align-items:center;gap:0.15rem;margin-left:auto;flex-wrap:wrap; }
+.ys-links a { color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.78rem;font-weight:500;padding:6px 12px;border-radius:8px;transition:all 0.2s;display:flex;align-items:center;gap:0.35rem;white-space:nowrap; }
+.ys-links a:hover { background:rgba(255,255,255,0.1);color:#fff; }
+.ys-links a.ys-active { background:linear-gradient(135deg,#FF5722,#FF8A65);color:#fff;box-shadow:0 2px 8px rgba(255,87,34,0.35); }
+.ys-langs { display:flex;gap:4px;margin-left:0.75rem;border-left:1px solid rgba(255,255,255,0.15);padding-left:0.75rem; }
+.ys-langs button { background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.75);border-radius:6px;padding:3px 9px;font-size:0.68rem;cursor:pointer;transition:all 0.2s; }
+.ys-langs button:hover,.ys-langs button.active { background:#FF5722;border-color:#FF5722;color:#fff; }
+</style>
+<nav class="ys-nav">
+    <a class="ys-brand" href="{{ url_for('passengers_home') }}">
+        <div class="ys-logo"><i class="bi bi-compass-fill" style="color:#fff;"></i></div>
+        <div class="ys-bt"><span class="t1">Yatra Saarthi</span><span class="t2">Smart Travel Portal</span></div>
+    </a>
+    <div class="ys-links">
+        <a href="{{ url_for('passengers_home') }}"><i class="bi bi-house-fill"></i> Home</a>
+        <a href="{{ url_for('passenger_timetables') }}"><i class="bi bi-map-fill"></i> Plan Trip</a>
+        <a href="{{ url_for('weather_page') }}" class="ys-active"><i class="bi bi-cloud-sun-fill"></i> Weather</a>
+        <a href="{{ url_for('train_map') }}"><i class="bi bi-train-front-fill"></i> Train Map</a>
+        <a href="{{ url_for('tourism_page') }}"><i class="bi bi-camera-fill"></i> Tourism</a>
+        <a href="{{ url_for('travel_guide') }}"><i class="bi bi-journal-richtext"></i> Guide</a>
+        <div class="ys-langs">
+            <button id="lang-en" onclick="switchLang('en')" class="active">EN</button>
+            <button id="lang-ta" onclick="switchLang('ta')">தமிழ்</button>
+            <button id="lang-te" onclick="switchLang('te')">తెలుగు</button>
         </div>
     </div>
 </nav>
