@@ -34,3 +34,12 @@ private,TN58 P032,NBS-703,National Bus Service,Krishnankovil – Madurai,Krishna
 private,TN58 P033,NBS-704,National Bus Service,Madurai – Krishnankovil,Madurai,Krishnankovil,19:00,20:30,Tirumangalam;Srivilliputhur,55,Non-AC Seater,available,3.6,yes,1h 30m,40,44
 private,TN58 P034,KPN-106,KPN Travels,Srivilliputhur – Madurai,Srivilliputhur,Madurai,07:00,08:10,Tirumangalam,48,AC Seater,available,4.1,yes,1h 10m,34,40
 private,TN58 P035,KPN-107,KPN Travels,Madurai – Srivilliputhur,Madurai,Srivilliputhur,17:00,18:10,Tirumangalam,48,AC Seater,available,4.1,yes,1h 10m,36,40
+private,TN58 P036,KPN-120,KPN Travels,Krishnankovil – Madurai,Krishnankovil,Madurai,07:30,09:00,Virudhunagar,120,AC Seater,available,4.3,yes,1h 30m,32,40
+private,TN58 P037,SRS-220,SRS Travels,Krishnankovil – Madurai,Krishnankovil,Madurai,08:30,10:00,Virudhunagar,120,AC Seater,available,4.2,yes,1h 30m,36,40
+private,TN58 P038,VRL-301,VRL Travels,Krishnankovil – Madurai,Krishnankovil,Madurai,09:30,11:00,Virudhunagar;Aruppukottai,130,Volvo AC,available,4.5,yes,1h 30m,28,36
+private,TN58 P039,GRT-401,GRT Travels,Krishnankovil – Madurai,Krishnankovil,Madurai,14:00,15:30,Virudhunagar,120,AC Seater,available,4.1,yes,1h 30m,30,40
+private,TN58 P040,KPN-121,KPN Travels,Krishnankovil – Madurai,Krishnankovil,Madurai,17:30,19:00,Virudhunagar,120,AC Seater,available,4.3,yes,1h 30m,26,40
+private,TN58 P041,SRS-221,SRS Travels,Krishnankovil – Madurai,Krishnankovil,Madurai,20:00,21:30,Virudhunagar,130,Volvo AC,available,4.4,yes,1h 30m,24,36
+private,TN58 P042,KPN-122,KPN Travels,Madurai – Krishnankovil,Madurai,Krishnankovil,08:00,09:30,Aruppukottai;Virudhunagar,120,AC Seater,available,4.2,yes,1h 30m,34,40
+private,TN58 P043,SRS-222,SRS Travels,Madurai – Krishnankovil,Madurai,Krishnankovil,16:00,17:30,Aruppukottai;Virudhunagar,120,AC Seater,available,4.3,yes,1h 30m,30,40
+private,TN58 P044,VRL-302,VRL Travels,Madurai – Krishnankovil,Madurai,Krishnankovil,20:30,22:00,Aruppukottai;Virudhunagar,130,Volvo AC,available,4.5,yes,1h 30m,22,36

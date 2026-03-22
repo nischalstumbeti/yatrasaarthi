@@ -75,3 +75,27 @@ local,TN77P 1205,77P,TNSTC,Krishnankovil,Sivakasi,13:30,13:55,,12,Ordinary,sched
 local,TN77P 1206,77P,TNSTC,Sivakasi,Krishnankovil,15:30,15:55,,12,Ordinary,scheduled,38,50
 local,TN77P 1207,77P,TNSTC,Krishnankovil,Sivakasi,17:30,17:55,,12,Ordinary,scheduled,30,50
 local,TN77P 1208,77P,TNSTC,Sivakasi,Krishnankovil,19:30,19:55,,12,Ordinary,scheduled,25,50
+local,TN58M 2001,58M,TNSTC,Krishnankovil,Madurai,05:30,07:00,Virudhunagar,55,Express,scheduled,48,52
+local,TN58M 2002,SETC-58M,SETC,Krishnankovil,Madurai,06:30,08:00,Virudhunagar;Aruppukottai,55,Express,scheduled,45,52
+local,TN58M 2003,58M,TNSTC,Krishnankovil,Madurai,07:30,09:00,Virudhunagar,55,Express,scheduled,50,52
+local,TN58M 2004,58M,TNSTC,Krishnankovil,Madurai,08:30,10:00,Virudhunagar;Aruppukottai,55,Express,scheduled,42,52
+local,TN58M 2005,58M,TNSTC,Krishnankovil,Madurai,09:30,11:00,Virudhunagar,55,Express,scheduled,40,52
+local,TN58M 2006,SETC-58M,SETC,Krishnankovil,Madurai,10:30,12:00,Virudhunagar;Aruppukottai,55,Express,scheduled,46,52
+local,TN58M 2007,58M,TNSTC,Krishnankovil,Madurai,11:30,13:00,Virudhunagar,55,Express,scheduled,38,52
+local,TN58M 2008,58M,TNSTC,Krishnankovil,Madurai,12:30,14:00,Virudhunagar;Aruppukottai,60,Super Deluxe,scheduled,35,44
+local,TN58M 2009,58M,TNSTC,Krishnankovil,Madurai,13:30,15:00,Virudhunagar,55,Express,scheduled,44,52
+local,TN58M 2010,58M,TNSTC,Krishnankovil,Madurai,14:30,16:00,Virudhunagar,55,Express,scheduled,50,52
+local,TN58M 2011,SETC-58M,SETC,Krishnankovil,Madurai,15:30,17:00,Virudhunagar;Aruppukottai,55,Express,scheduled,41,52
+local,TN58M 2012,58M,TNSTC,Krishnankovil,Madurai,16:30,18:00,Virudhunagar,55,Express,scheduled,30,52
+local,TN58M 2013,58M,TNSTC,Krishnankovil,Madurai,17:30,19:00,Virudhunagar,60,Super Deluxe,scheduled,28,44
+local,TN58M 2014,58M,TNSTC,Krishnankovil,Madurai,18:30,20:00,Virudhunagar;Aruppukottai,55,Express,scheduled,36,52
+local,TN58M 2015,58M,TNSTC,Krishnankovil,Madurai,19:30,21:00,Virudhunagar,55,Express,scheduled,22,52
+local,TN58M 2016,SETC-58M,SETC,Krishnankovil,Madurai,20:30,22:00,Virudhunagar;Aruppukottai,55,Express,scheduled,18,52
+local,TN58M 3001,58M,TNSTC,Madurai,Krishnankovil,06:00,07:30,Aruppukottai;Virudhunagar,55,Express,scheduled,48,52
+local,TN58M 3002,58M,TNSTC,Madurai,Krishnankovil,08:00,09:30,Aruppukottai;Virudhunagar,55,Express,scheduled,46,52
+local,TN58M 3003,SETC-58M,SETC,Madurai,Krishnankovil,10:00,11:30,Aruppukottai;Virudhunagar,55,Express,scheduled,44,52
+local,TN58M 3004,58M,TNSTC,Madurai,Krishnankovil,12:00,13:30,Aruppukottai;Virudhunagar,60,Super Deluxe,scheduled,32,44
+local,TN58M 3005,58M,TNSTC,Madurai,Krishnankovil,14:00,15:30,Aruppukottai;Virudhunagar,55,Express,scheduled,40,52
+local,TN58M 3006,58M,TNSTC,Madurai,Krishnankovil,16:00,17:30,Aruppukottai;Virudhunagar,55,Express,scheduled,36,52
+local,TN58M 3007,SETC-58M,SETC,Madurai,Krishnankovil,18:00,19:30,Aruppukottai;Virudhunagar,55,Express,scheduled,28,52
+local,TN58M 3008,58M,TNSTC,Madurai,Krishnankovil,20:00,21:30,Aruppukottai;Virudhunagar,55,Express,scheduled,20,52
