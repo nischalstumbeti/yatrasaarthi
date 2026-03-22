@@ -19,27 +19,6 @@ try:
 except ImportError:
     requests = None
 
-# ── CORS: allow Campus GPT (any origin) to call our APIs ──────────────────────
-from functools import wraps
-def _cors(f):
-    @wraps(f)
-    def _wrapped(*args, **kwargs):
-        resp = f(*args, **kwargs)
-        if hasattr(resp, 'headers'):
-            resp.headers['Access-Control-Allow-Origin']  = '*'
-            resp.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
-            resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
-        return resp
-    return _wrapped
-
-@app.after_request
-def add_cors_headers(response):
-    """Add CORS headers to every /api/* response so Campus GPT can call from any origin."""
-    if request.path.startswith('/api/'):
-        response.headers['Access-Control-Allow-Origin']  = '*'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
-        response.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
-    return response
 
 
 def create_admin_user():
@@ -81,6 +60,15 @@ csrf = CSRFProtect(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+@app.after_request
+def add_cors_headers(response):
+    """CORS: allow Campus GPT (any origin) to call /api/* endpoints."""
+    if request.path.startswith('/api/'):
+        response.headers['Access-Control-Allow-Origin']  = '*'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+        response.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+    return response
 def register_template_filters(app):
     from jinja2.runtime import Undefined
     app.jinja_env.filters['fromjson'] = json.loads
