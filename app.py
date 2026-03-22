@@ -19,6 +19,29 @@ try:
 except ImportError:
     requests = None
 
+# ── CORS: allow Campus GPT (any origin) to call our APIs ──────────────────────
+from functools import wraps
+def _cors(f):
+    @wraps(f)
+    def _wrapped(*args, **kwargs):
+        resp = f(*args, **kwargs)
+        if hasattr(resp, 'headers'):
+            resp.headers['Access-Control-Allow-Origin']  = '*'
+            resp.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+            resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+        return resp
+    return _wrapped
+
+@app.after_request
+def add_cors_headers(response):
+    """Add CORS headers to every /api/* response so Campus GPT can call from any origin."""
+    if request.path.startswith('/api/'):
+        response.headers['Access-Control-Allow-Origin']  = '*'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+        response.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+    return response
+
+
 def create_admin_user():
     from werkzeug.security import generate_password_hash
     
@@ -5916,6 +5939,249 @@ def api_nearby_airports():
     return jsonify({'airports': nearby, 'count': len(nearby), 'searched_lat': lat, 'searched_lng': lng})
 
 
+@app.route('/api/campus-gpt/query', methods=['GET', 'POST', 'OPTIONS'])
+def campus_gpt_query():
+    """
+    Unified Campus GPT integration endpoint.
+    Accepts a natural-language query and returns structured transport data.
+
+    GET  /api/campus-gpt/query?q=Check+timings+for+Krishnankovil+to+Madurai
+    POST /api/campus-gpt/query  body: {"query": "next bus from Krishnankovil to Madurai"}
+    """
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        resp = jsonify({'ok': True})
+        resp.headers['Access-Control-Allow-Origin']  = '*'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+        return resp
+
+    import re as _re
+
+    # ── Extract query string ──────────────────────────────────────────────────
+    if request.method == 'POST':
+        body  = request.get_json(silent=True) or {}
+        query = body.get('query', '').strip()
+    else:
+        query = request.args.get('q', request.args.get('query', '')).strip()
+
+    if not query:
+        return jsonify({'error': 'Provide a query via ?q= or POST body {"query":"..."}'}), 400
+
+    q = query.lower()
+
+    # ── Simple intent + entity extractor ─────────────────────────────────────
+    # Spelling aliases (same list as elsewhere in the app)
+    _ALIASES = {
+        'krishnankoil': 'Krishnankovil', 'krishnan koil': 'Krishnankovil',
+        'krishnan kovil': 'Krishnankovil', 'srivilliputtur': 'Srivilliputhur',
+        'bangalore': 'Bengaluru', 'trivandrum': 'Thiruvananthapuram',
+        'bombay': 'Mumbai', 'calcutta': 'Kolkata', 'madras': 'Chennai',
+        'kovil': 'Krishnankovil', 'svpt': 'Srivilliputhur',
+        'vdn': 'Virudhunagar', 'mdu': 'Madurai', 'cbe': 'Coimbatore',
+    }
+
+    def _normalise(word):
+        return _ALIASES.get(word.lower(), word.title())
+
+    # Detect mode
+    mode = 'bus'
+    if any(w in q for w in ['train', 'irctc', 'railway', 'express', 'superfast']):
+        mode = 'train'
+    elif any(w in q for w in ['flight', 'fly', 'airport', 'plane', 'air']):
+        mode = 'flight'
+    elif any(w in q for w in ['car', 'drive', 'bike', 'road', 'distance', 'km', 'travel time']):
+        mode = 'road'
+
+    # Extract origin and destination using common patterns
+    origin, destination = None, None
+    # Words to strip before treating as city names
+    _STOP = {'check','timings','timing','schedule','bus','train','flight',
+             'for','the','a','an','any','next','last','when','how','what',
+             'is','are','there','show','get','find','me','please','can','i'}
+
+    def _clean_city(raw):
+        words = raw.strip().split()
+        words = [w for w in words if w.lower() not in _STOP]
+        return _normalise(' '.join(words)) if words else ''
+
+    # Pattern 1: "from X to Y"
+    m = _re.search(r'from\s+([a-z ]+?)\s+to\s+([a-z ]+?)(?:\s+by|\s+bus|\s+train|\s+via|$)', q)
+    if m:
+        origin      = _clean_city(m.group(1))
+        destination = _clean_city(m.group(2))
+    if not origin or not destination:
+        # Pattern 2: "for X to Y"
+        m = _re.search(r'for\s+([a-z ]+?)\s+to\s+([a-z ]+?)(?:\s+by|\s+bus|\s+train|\s*$)', q)
+        if m:
+            origin      = _clean_city(m.group(1))
+            destination = _clean_city(m.group(2))
+    if not origin or not destination:
+        # Pattern 3: bare "X to Y" — exclude common noise words as left token
+        m2 = _re.search(r'\b([a-z]{4,}(?:\s[a-z]{3,})?)\s+to\s+([a-z]{4,}(?:\s[a-z]{3,})?)\b', q)
+        if m2:
+            cand1 = _clean_city(m2.group(1))
+            cand2 = _clean_city(m2.group(2))
+            if cand1 and cand2:
+                origin, destination = cand1, cand2
+
+    if not origin or not destination:
+        return jsonify({
+            'intent': 'unknown',
+            'answer': (
+                "I could not understand the origin and destination from your query. "
+                "Please try: 'Check bus timings from Krishnankovil to Madurai'"
+            ),
+            'data': {}
+        })
+
+    # ── Route intent detection ────────────────────────────────────────────────
+    intent = 'bus_timings'
+    if mode == 'train':
+        intent = 'train_timings'
+    elif mode == 'flight':
+        intent = 'flight_info'
+    elif mode == 'road':
+        intent = 'road_distance'
+    elif any(w in q for w in ['next bus', 'when is', 'next', 'timing', 'time', 'schedule', 'depart']):
+        intent = 'bus_timings'
+    elif any(w in q for w in ['seat', 'available', 'crowd', 'full', 'empty']):
+        intent = 'seat_availability'
+    elif any(w in q for w in ['fare', 'cost', 'price', 'how much', 'ticket']):
+        intent = 'fare_info'
+
+    # ── Fetch data ────────────────────────────────────────────────────────────
+    ol, dl = origin.lower(), destination.lower()
+    response_data = {}
+    answer_lines  = []
+
+    if intent in ('bus_timings', 'seat_availability', 'fare_info'):
+        # Query both govt and private buses
+        govt_buses = LocalBus.query.filter(
+            LocalBus.is_active == True,
+            or_(
+                and_(func.lower(LocalBus.origin) == ol, func.lower(LocalBus.destination) == dl),
+                and_(func.lower(LocalBus.origin) == dl, func.lower(LocalBus.destination) == ol)
+            )
+        ).order_by(LocalBus.departure_time).all()
+
+        pvt_buses = PrivateOperator.query.filter(
+            PrivateOperator.is_active == True,
+            or_(
+                and_(func.lower(PrivateOperator.origin) == ol, func.lower(PrivateOperator.destination) == dl),
+                and_(func.lower(PrivateOperator.origin) == dl, func.lower(PrivateOperator.destination) == ol)
+            )
+        ).order_by(PrivateOperator.departure_time).all()
+
+        total = len(govt_buses) + len(pvt_buses)
+
+        if total == 0:
+            answer_lines.append(
+                f"Sorry, no bus services found between {origin} and {destination}. "
+                "Try searching on the Yatra Saarthi website for more options."
+            )
+        else:
+            if intent == 'fare_info':
+                answer_lines.append(f"**Fare information — {origin} to {destination}:**")
+                for b in govt_buses[:5]:
+                    answer_lines.append(f"• {b.operator} ({b.bus_type}): ₹{b.fare:.0f}")
+                for b in pvt_buses[:5]:
+                    answer_lines.append(f"• {b.operator_name} ({b.bus_type}): ₹{b.fare:.0f}")
+
+            elif intent == 'seat_availability':
+                answer_lines.append(f"**Seat availability — {origin} to {destination}:**")
+                for b in (govt_buses + pvt_buses)[:6]:
+                    name = getattr(b, 'operator', None) or getattr(b, 'operator_name', '')
+                    dep  = b.departure_time.strftime('%H:%M') if b.departure_time else '--:--'
+                    seats = b.seat_availability
+                    status = "🟢 Available" if seats > 10 else ("🟡 Filling fast" if seats > 0 else "🔴 Full")
+                    answer_lines.append(f"• {dep} | {name} | {seats} seats left {status}")
+
+            else:  # bus_timings (default)
+                answer_lines.append(f"**Buses from {origin} to {destination}:**")
+                if govt_buses:
+                    answer_lines.append(f"\n🚌 Government Buses ({len(govt_buses)} found):")
+                    for b in govt_buses[:6]:
+                        dep = b.departure_time.strftime('%H:%M') if b.departure_time else '--:--'
+                        arr = b.arrival_time.strftime('%H:%M')   if b.arrival_time  else '--:--'
+                        answer_lines.append(
+                            f"  • {dep} → {arr} | {b.operator} | {b.bus_type} | ₹{b.fare:.0f} | {b.seat_availability} seats"
+                        )
+                if pvt_buses:
+                    answer_lines.append(f"\n🚌 Private Buses ({len(pvt_buses)} found):")
+                    for b in pvt_buses[:6]:
+                        dep = b.departure_time.strftime('%H:%M') if b.departure_time else '--:--'
+                        arr = b.arrival_time.strftime('%H:%M')   if b.arrival_time  else '--:--'
+                        answer_lines.append(
+                            f"  • {dep} → {arr} | {b.operator_name} | {b.bus_type} | ₹{b.fare:.0f} | Rating: {b.rating}⭐"
+                        )
+
+        response_data = {
+            'govt_buses':    [b.to_dict() for b in govt_buses],
+            'private_buses': [{'operator': b.operator_name, 'bus_number': b.bus_number,
+                               'route': b.route_name, 'departure': b.departure_time.strftime('%H:%M'),
+                               'arrival': b.arrival_time.strftime('%H:%M'), 'fare': b.fare,
+                               'bus_type': b.bus_type, 'seats': b.seat_availability,
+                               'rating': b.rating, 'duration': b.duration}
+                              for b in pvt_buses],
+            'total_count': total,
+        }
+
+    elif intent == 'road_distance':
+        # Inline Haversine road estimate
+        import math as _m
+        def _road(o, d):
+            _SP = {'krishnankoil':'krishnankovil','bangalore':'bengaluru',
+                   'trivandrum':'thiruvananthapuram','bombay':'mumbai','calcutta':'kolkata'}
+            c1 = CITY_COORDS.get(_SP.get(o, o))
+            c2 = CITY_COORDS.get(_SP.get(d, d))
+            if not c1 or not c2:
+                return None
+            dlat = _m.radians(c2[0]-c1[0]); dlon = _m.radians(c2[1]-c1[1])
+            a = _m.sin(dlat/2)**2 + _m.cos(_m.radians(c1[0]))*_m.cos(_m.radians(c2[0]))*_m.sin(dlon/2)**2
+            km = round(6371*2*_m.asin(_m.sqrt(a))*1.3)
+            return km
+        dist = _road(ol, dl)
+        if dist:
+            car_h, car_m  = divmod(int(dist/60*60), 60)
+            bike_h, bike_m = divmod(int(dist/40*60), 60)
+            car_fuel  = round(dist/15*102)
+            bike_fuel = round(dist/45*102)
+            answer_lines += [
+                f"**Road distance — {origin} to {destination}:**",
+                f"📍 Distance: ~{dist} km (approximate)",
+                f"🚗 By Car:  ~{car_h}h {car_m}m  |  Fuel ~₹{car_fuel}",
+                f"🏍️ By Bike: ~{bike_h}h {bike_m}m  |  Fuel ~₹{bike_fuel}",
+            ]
+            response_data = {'distance_km': dist, 'car_hours': car_h, 'car_mins': car_m,
+                             'bike_hours': bike_h, 'bike_mins': bike_m,
+                             'car_fuel': car_fuel, 'bike_fuel': bike_fuel}
+        else:
+            answer_lines.append(f"Could not calculate road distance for {origin} to {destination}.")
+
+    else:
+        answer_lines.append(
+            f"For {mode} information between {origin} and {destination}, "
+            f"please visit the Yatra Saarthi website or use the search page."
+        )
+
+    base = request.host_url.rstrip('/')
+    resp = jsonify({
+        'intent':      intent,
+        'mode':        mode,
+        'origin':      origin,
+        'destination': destination,
+        'query':       query,
+        'answer':      '\n'.join(answer_lines),
+        'data':        response_data,
+        'yatraSaarthiUrl': f'{base}/passengers/timetables?origin={origin}&destination={destination}',
+    })
+    resp.headers['Access-Control-Allow-Origin']  = '*'
+    resp.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+    return resp
+
+
 @app.route('/api/nearby-stations')
 def api_nearby_stations():
     """Return railway stations within radius_km of a city name or lat/lng."""
@@ -6828,4 +7094,6 @@ def internal_error(e):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    import os as _os
+    port = int(_os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
