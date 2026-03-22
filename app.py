@@ -4884,6 +4884,30 @@ def passenger_timetables():
     origin      = request.args.get('origin', '').strip()
     destination = request.args.get('destination', '').strip()
 
+    # Normalise common spelling variations so DB lookups always match
+    _CITY_ALIASES = {
+        'krishnankoil':        'Krishnankovil',
+        'krishnan koil':       'Krishnankovil',
+        'krishnan kovil':      'Krishnankovil',
+        'srivilliputtur':      'Srivilliputhur',
+        'srivilliputhur':      'Srivilliputhur',
+        'bangalore':           'Bengaluru',
+        'bengalore':           'Bengaluru',
+        'trivandrum':          'Thiruvananthapuram',
+        'bombay':              'Mumbai',
+        'calcutta':            'Kolkata',
+        'madras':              'Chennai',
+        'coimbatore':          'Coimbatore',
+        'tirunelveli':         'Tirunelveli',
+        'virudhunagar':        'Virudhunagar',
+        'rajapalayam':         'Rajapalayam',
+        'tenkasi':             'Tenkasi',
+    }
+    def _norm_city(c):
+        return _CITY_ALIASES.get(c.lower(), c.title()) if c else c
+    origin      = _norm_city(origin)
+    destination = _norm_city(destination)
+
     # ── Approximate road distances (km) between common South-India cities ──
     _DISTANCES = {
         frozenset(['srivilliputhur','madurai']): 75,
