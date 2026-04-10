@@ -4883,6 +4883,13 @@ def passenger_timetables():
     """Show multi-modal travel options: bus, train, flight, car, bike."""
     origin      = request.args.get('origin', '').strip()
     destination = request.args.get('destination', '').strip()
+    travel_date = request.args.get('date', '').strip()
+
+    from datetime import date as _date, timedelta as _td
+    _today    = _date.today()
+    _max_date = _today + _td(days=90)
+    today_str    = _today.strftime('%Y-%m-%d')
+    max_date_str = _max_date.strftime('%Y-%m-%d')
 
     # Normalise common spelling variations so DB lookups always match
     _CITY_ALIASES = {
@@ -5063,8 +5070,11 @@ def passenger_timetables():
                            road_info=road_info,
                            origin=origin,
                            destination=destination,
+                           travel_date=travel_date,
                            all_cities=sorted(all_cities),
-                           today_date=_tdate.today().strftime('%Y-%m-%d'))
+                           today=today_str,
+                           max_date=max_date_str,
+                           today_date=today_str)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Weather Forecast Helper

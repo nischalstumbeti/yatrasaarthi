@@ -306,7 +306,7 @@
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div>
                 <h2><i class="bi bi-signpost-split-fill me-2" style="color:var(--amber);"></i>All Travel Options</h2>
-                <p>Compare Bus · Train · Flight · Car · Bike for your journey from <strong style="color:rgba(255,255,255,0.8);">{{ origin or 'Origin' }}</strong> to <strong style="color:rgba(255,255,255,0.8);">{{ destination or 'Destination' }}</strong></p>
+                <p>Compare Bus · Train · Flight · Car · Bike for your journey from <strong style="color:rgba(255,255,255,0.8);">{{ origin or 'Origin' }}</strong> to <strong style="color:rgba(255,255,255,0.8);">{{ destination or 'Destination' }}</strong>{% if travel_date %} &nbsp;·&nbsp; <i class="bi bi-calendar3" style="color:var(--amber);"></i> <strong style="color:var(--amber);">{{ travel_date }}</strong>{% endif %}</p>
             </div>
             <span id="liveClock" style="font-family:'Courier New',monospace;font-size:1.5rem;color:var(--amber);font-weight:800;letter-spacing:0.1em;background:rgba(255,179,0,0.1);padding:6px 16px;border-radius:10px;border:1px solid rgba(255,179,0,0.2);"></span>
         </div>
@@ -336,10 +336,50 @@
 </style>
 
 <!-- Search -->
+<style>
+.date-field input[type="date"] {
+    background: #fff;
+    border: 1.5px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    width: 100%;
+    color: #1a1a1a;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+.date-field input[type="date"]:focus {
+    outline: none;
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,87,34,0.12);
+}
+.date-field input[type="date"]:required:invalid {
+    border-color: #dee2e6;
+}
+.date-badge {
+    display: inline-block;
+    background: rgba(255,179,0,0.15);
+    color: var(--amber);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+#dateHint {
+    font-size: 0.72rem;
+    color: #e53935;
+    margin-top: 4px;
+    display: none;
+}
+</style>
+
 <div class="search-panel">
     <div class="container">
-        <form method="GET" id="searchForm" class="row g-3 align-items-end">
-            <div class="col-md-4">
+        <form method="GET" id="searchForm" class="row g-3 align-items-end" novalidate>
+            <!-- From -->
+            <div class="col-md-3">
                 <label><i class="bi bi-geo-alt-fill" style="color:var(--orange);"></i> From</label>
                 <div class="ac-wrap">
                     <input type="text" class="form-control" id="originInput" name="origin" value="{{ origin }}"
@@ -347,7 +387,8 @@
                     <div class="ac-dropdown" id="originDropdown"></div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <!-- To -->
+            <div class="col-md-3">
                 <label><i class="bi bi-geo-alt" style="color:#2E7D32;"></i> To</label>
                 <div class="ac-wrap">
                     <input type="text" class="form-control" id="destinationInput" name="destination" value="{{ destination }}"
@@ -355,8 +396,21 @@
                     <div class="ac-dropdown" id="destinationDropdown"></div>
                 </div>
             </div>
-            <div class="col-md-4 d-flex gap-2 align-items-end">
-                <button type="submit" class="btn-search flex-grow-1">
+            <!-- Date -->
+            <div class="col-md-3 date-field">
+                <label>
+                    <i class="bi bi-calendar3" style="color:var(--amber);"></i>
+                    Travel Date <span class="date-badge">Required</span>
+                </label>
+                <input type="date" id="travelDate" name="date"
+                       value="{{ request.args.get('date', '') }}"
+                       min="{{ today }}"
+                       max="{{ max_date }}">
+                <div id="dateHint">Please select a travel date to search.</div>
+            </div>
+            <!-- Button -->
+            <div class="col-md-3 d-flex gap-2 align-items-end">
+                <button type="submit" id="searchBtn" class="btn-search flex-grow-1">
                     <i class="bi bi-search me-1"></i> Find All Options
                 </button>
                 {% if origin or destination %}
@@ -366,6 +420,45 @@
         </form>
     </div>
 </div>
+
+<script>
+/* ── Date validation: block search until date is picked ── */
+(function(){
+    const form     = document.getElementById('searchForm');
+    const dateIn   = document.getElementById('travelDate');
+    const hint     = document.getElementById('dateHint');
+    const searchBtn= document.getElementById('searchBtn');
+
+    function updateBtn(){
+        const hasDate = dateIn.value.trim() !== '';
+        searchBtn.disabled = !hasDate;
+        searchBtn.style.opacity = hasDate ? '1' : '0.55';
+        searchBtn.style.cursor  = hasDate ? 'pointer' : 'not-allowed';
+        hint.style.display = hasDate ? 'none' : '';
+    }
+
+    dateIn.addEventListener('change', updateBtn);
+    dateIn.addEventListener('input',  updateBtn);
+
+    form.addEventListener('submit', function(e){
+        if(!dateIn.value.trim()){
+            e.preventDefault();
+            hint.style.display = 'block';
+            dateIn.focus();
+            dateIn.style.borderColor = '#e53935';
+            setTimeout(()=>{ dateIn.style.borderColor = ''; }, 2000);
+        }
+    });
+
+    // Run on load — disable button if no date yet
+    updateBtn();
+
+    // If date already in URL (page reload), keep it selected
+    const params = new URLSearchParams(window.location.search);
+    if(params.get('date')) dateIn.value = params.get('date');
+    updateBtn();
+})();
+</script>
 
 <script>
 /* ═══════════════════════════════════════
