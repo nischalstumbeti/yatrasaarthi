@@ -463,11 +463,70 @@
 <script>
 /* ═══════════════════════════════════════
    CITY / VILLAGE AUTOCOMPLETE
-   Uses OpenStreetMap Nominatim (free, no key)
+   Local priority list + OpenStreetMap Nominatim
 ═══════════════════════════════════════ */
 (function(){
     const DEBOUNCE_MS = 350;
     const MIN_CHARS   = 2;
+
+    /* ── Local priority places (shown first, even if Nominatim misses them) ── */
+    const LOCAL_PLACES = [
+        {name:'Krishnankovil',    state:'TN', district:'Virudhunagar', icon:'🏘️'},
+        {name:'Srivilliputhur',   state:'TN', district:'Virudhunagar', icon:'🏘️'},
+        {name:'Virudhunagar',     state:'TN', district:'Virudhunagar', icon:'🏙️'},
+        {name:'Madurai',          state:'TN', district:'Madurai',      icon:'🏙️'},
+        {name:'Chennai',          state:'TN', district:'Chennai',      icon:'🏙️'},
+        {name:'Coimbatore',       state:'TN', district:'Coimbatore',   icon:'🏙️'},
+        {name:'Trichy',           state:'TN', district:'Tiruchirappalli', icon:'🏙️'},
+        {name:'Tirunelveli',      state:'TN', district:'Tirunelveli',  icon:'🏙️'},
+        {name:'Tenkasi',          state:'TN', district:'Tenkasi',      icon:'🏘️'},
+        {name:'Rajapalayam',      state:'TN', district:'Virudhunagar', icon:'🏘️'},
+        {name:'Sivakasi',         state:'TN', district:'Virudhunagar', icon:'🏘️'},
+        {name:'Aruppukottai',     state:'TN', district:'Virudhunagar', icon:'🏘️'},
+        {name:'Watrap',           state:'TN', district:'Virudhunagar', icon:'🏘️'},
+        {name:'Sattur',           state:'TN', district:'Virudhunagar', icon:'🏘️'},
+        {name:'Tirumangalam',     state:'TN', district:'Madurai',      icon:'🏘️'},
+        {name:'Dindigul',         state:'TN', district:'Dindigul',     icon:'🏙️'},
+        {name:'Salem',            state:'TN', district:'Salem',        icon:'🏙️'},
+        {name:'Bengaluru',        state:'KA', district:'Bengaluru',    icon:'🏙️'},
+        {name:'Thiruvananthapuram',state:'KL',district:'Thiruvananthapuram',icon:'🏙️'},
+        {name:'Nagercoil',        state:'TN', district:'Kanyakumari',  icon:'🏙️'},
+        {name:'Kanyakumari',      state:'TN', district:'Kanyakumari',  icon:'🏘️'},
+        {name:'Thoothukudi',      state:'TN', district:'Thoothukudi',  icon:'🏙️'},
+        {name:'Kumbakonam',       state:'TN', district:'Thanjavur',    icon:'🏘️'},
+        {name:'Thanjavur',        state:'TN', district:'Thanjavur',    icon:'🏙️'},
+        {name:'Vellore',          state:'TN', district:'Vellore',      icon:'🏙️'},
+        {name:'Erode',            state:'TN', district:'Erode',        icon:'🏙️'},
+        {name:'Hyderabad',        state:'TS', district:'Hyderabad',    icon:'🏙️'},
+        {name:'Mumbai',           state:'MH', district:'Mumbai',       icon:'🏙️'},
+        {name:'Delhi',            state:'DL', district:'Delhi',        icon:'🏙️'},
+        {name:'Kolkata',          state:'WB', district:'Kolkata',      icon:'🏙️'},
+        {name:'Vijayawada',       state:'AP', district:'Krishna',      icon:'🏙️'},
+        {name:'Tirupati',         state:'AP', district:'Tirupati',     icon:'🏙️'},
+    ];
+
+    function matchLocal(query){
+        const q = query.toLowerCase().replace(/\s+/g,'');
+        return LOCAL_PLACES.filter(p => {
+            const n = p.name.toLowerCase().replace(/\s+/g,'');
+            // match aliases too
+            const aliases = {'krishnankoil':'krishnankovil','srivilliputtur':'srivilliputhur','bangalore':'bengaluru','trivandrum':'thiruvananthapuram'};
+            const norm = aliases[q] || q;
+            return n.startsWith(norm) || n.startsWith(q) || p.name.toLowerCase().includes(query.toLowerCase());
+        });
+    }
+
+    function renderLocalItems(matches, input, dropdown, inputId){
+        return matches.map((p, i) => `
+            <div class="ac-item ac-local" data-value="${p.name}" data-idx="L${i}">
+                <span class="ac-icon">${p.icon}</span>
+                <div>
+                    <div class="ac-name">${p.name}</div>
+                    <div class="ac-state">${p.district}, ${p.state}</div>
+                </div>
+                <span style="font-size:0.6rem;background:rgba(255,87,34,0.12);color:#FF5722;padding:1px 6px;border-radius:10px;margin-left:auto;flex-shrink:0;">Local</span>
+            </div>`).join('');
+    }
 
     /* State Abbreviation lookup */
     const STATE_ABBR = {
@@ -552,63 +611,67 @@
     }
 
     function fetchSuggestions(query, input, dropdown, inputId){
-        if(_cache[query]){
-            renderSuggestions(_cache[query], input, dropdown, inputId); return;
-        }
-        dropdown.innerHTML='<div class="ac-loading"><span class="spinner" style="border-top-color:#E65100;width:14px;height:14px;"></span> Searching…</div>';
-        dropdown.classList.add('show');
+        // Step 1 — show local matches instantly
+        const localMatches = matchLocal(query);
+        const localHTML    = renderLocalItems(localMatches, input, dropdown, inputId);
 
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&limit=10&format=json&addressdetails=1&featuretype=city,town,village,hamlet`;
+        if(_cache[query]){
+            const apiHTML = buildApiHTML(_cache[query]);
+            dropdown.innerHTML = localHTML + (apiHTML ? '<div class="ac-loading" style="font-size:0.68rem;padding:4px 14px;color:#aaa;">── Other places ──</div>' + apiHTML : '');
+            dropdown.classList.add('show');
+            attachClickHandlers(dropdown, input, inputId);
+            return;
+        }
+
+        // Show local results immediately while API loads
+        dropdown.innerHTML = localHTML +
+            (localMatches.length ? '<div class="ac-loading" style="font-size:0.68rem;padding:4px 14px;color:#aaa;">── Searching more… ──</div>' : '<div class="ac-loading"><span class="spinner" style="border-top-color:#E65100;width:14px;height:14px;"></span> Searching…</div>');
+        dropdown.classList.add('show');
+        attachClickHandlers(dropdown, input, inputId);
+
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=in&limit=8&format=json&addressdetails=1&featuretype=city,town,village,hamlet`;
 
         fetch(url, { headers:{'Accept-Language':'en'} })
         .then(r=>r.json())
         .then(results=>{
             _cache[query] = results;
-            renderSuggestions(results, input, dropdown, inputId);
+            const apiHTML = buildApiHTML(results);
+            dropdown.innerHTML = localHTML +
+                (apiHTML ? '<div class="ac-loading" style="font-size:0.68rem;padding:4px 14px;color:#aaa;">── Other places ──</div>' + apiHTML : '');
+            dropdown.classList.add('show');
+            attachClickHandlers(dropdown, input, inputId);
         })
         .catch(()=>{
-            dropdown.innerHTML='<div class="ac-loading" style="color:#c00;">⚠️ Could not fetch suggestions</div>';
+            if(!localMatches.length)
+                dropdown.innerHTML='<div class="ac-loading" style="color:#c00;">⚠️ Could not fetch suggestions</div>';
         });
     }
 
-    function renderSuggestions(results, input, dropdown, inputId){
-        _active[inputId] = -1;
-        if(!results || !results.length){
-            dropdown.innerHTML='<div class="ac-loading">No places found in India</div>';
-            dropdown.classList.add('show');
-            return;
-        }
-
-        /* Deduplicate by display name */
+    function buildApiHTML(results){
+        if(!results || !results.length) return '';
         const seen = new Set();
         const filtered = results.filter(r=>{
-            const key = (r.address.city||r.address.town||r.address.village||r.address.hamlet||r.display_name.split(',')[0]).toLowerCase();
-            if(seen.has(key)) return false;
-            seen.add(key); return true;
+            const key=(r.address.city||r.address.town||r.address.village||r.address.hamlet||r.display_name.split(',')[0]).toLowerCase();
+            if(seen.has(key)) return false; seen.add(key); return true;
         });
-
-        dropdown.innerHTML = filtered.map((r,i)=>{
-            const placeName = r.address.city || r.address.town || r.address.village ||
-                              r.address.hamlet || r.address.suburb || r.display_name.split(',')[0];
+        return filtered.map((r,i)=>{
+            const placeName = r.address.city||r.address.town||r.address.village||r.address.hamlet||r.address.suburb||r.display_name.split(',')[0];
             const state = getStateLabel(r.address);
-            const dist  = r.address.county || r.address.state_district || '';
+            const dist  = r.address.county||r.address.state_district||'';
             const icon  = getPlaceIcon(r.type, r.class);
-            const label = dist && dist!==placeName ? `${dist}, ${state}` : state;
-            return `<div class="ac-item" data-value="${placeName}" data-idx="${i}">
+            const label = dist&&dist!==placeName?`${dist}, ${state}`:state;
+            return `<div class="ac-item" data-value="${placeName}" data-idx="A${i}">
                 <span class="ac-icon">${icon}</span>
-                <div>
-                    <div class="ac-name">${placeName}</div>
-                    <div class="ac-state">${label}</div>
-                </div>
+                <div><div class="ac-name">${placeName}</div><div class="ac-state">${label}</div></div>
             </div>`;
         }).join('');
+    }
 
-        dropdown.classList.add('show');
-
+    function attachClickHandlers(dropdown, input, inputId){
         dropdown.querySelectorAll('.ac-item').forEach(item=>{
             item.addEventListener('mouseenter', function(){
-                _active[inputId] = parseInt(this.dataset.idx);
-                dropdown.querySelectorAll('.ac-item').forEach((el,i)=>el.classList.toggle('active',i===_active[inputId]));
+                dropdown.querySelectorAll('.ac-item').forEach(el=>el.classList.remove('active'));
+                this.classList.add('active');
             });
             item.addEventListener('click', function(){
                 input.value = this.dataset.value;
@@ -617,6 +680,7 @@
             });
         });
     }
+
 
     /* Init both fields */
     setupAutocomplete('originInput',      'originDropdown');

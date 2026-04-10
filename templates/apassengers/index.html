@@ -1627,10 +1627,63 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ═══════════════════════════════════════
-   CITY AUTOCOMPLETE (Nominatim)
+   CITY AUTOCOMPLETE — Local priority + Nominatim
 ═══════════════════════════════════════ */
 (function(){
+    var LOCAL = [
+        {n:'Krishnankovil', s:'TN', d:'Virudhunagar', ic:'🏘️'},
+        {n:'Srivilliputhur',s:'TN', d:'Virudhunagar', ic:'🏘️'},
+        {n:'Virudhunagar',  s:'TN', d:'Virudhunagar', ic:'🏙️'},
+        {n:'Madurai',       s:'TN', d:'Madurai',      ic:'🏙️'},
+        {n:'Chennai',       s:'TN', d:'Chennai',      ic:'🏙️'},
+        {n:'Coimbatore',    s:'TN', d:'Coimbatore',   ic:'🏙️'},
+        {n:'Trichy',        s:'TN', d:'Tiruchirappalli',ic:'🏙️'},
+        {n:'Tirunelveli',   s:'TN', d:'Tirunelveli',  ic:'🏙️'},
+        {n:'Tenkasi',       s:'TN', d:'Tenkasi',      ic:'🏘️'},
+        {n:'Rajapalayam',   s:'TN', d:'Virudhunagar', ic:'🏘️'},
+        {n:'Sivakasi',      s:'TN', d:'Virudhunagar', ic:'🏘️'},
+        {n:'Aruppukottai',  s:'TN', d:'Virudhunagar', ic:'🏘️'},
+        {n:'Watrap',        s:'TN', d:'Virudhunagar', ic:'🏘️'},
+        {n:'Sattur',        s:'TN', d:'Virudhunagar', ic:'🏘️'},
+        {n:'Tirumangalam',  s:'TN', d:'Madurai',      ic:'🏘️'},
+        {n:'Dindigul',      s:'TN', d:'Dindigul',     ic:'🏙️'},
+        {n:'Salem',         s:'TN', d:'Salem',        ic:'🏙️'},
+        {n:'Nagercoil',     s:'TN', d:'Kanyakumari',  ic:'🏙️'},
+        {n:'Thoothukudi',   s:'TN', d:'Thoothukudi',  ic:'🏙️'},
+        {n:'Erode',         s:'TN', d:'Erode',        ic:'🏙️'},
+        {n:'Vellore',       s:'TN', d:'Vellore',      ic:'🏙️'},
+        {n:'Thanjavur',     s:'TN', d:'Thanjavur',    ic:'🏙️'},
+        {n:'Bengaluru',     s:'KA', d:'Bengaluru',    ic:'🏙️'},
+        {n:'Hyderabad',     s:'TS', d:'Hyderabad',    ic:'🏙️'},
+        {n:'Thiruvananthapuram',s:'KL',d:'Thiruvananthapuram',ic:'🏙️'},
+        {n:'Mumbai',        s:'MH', d:'Mumbai',       ic:'🏙️'},
+        {n:'Delhi',         s:'DL', d:'Delhi',        ic:'🏙️'},
+        {n:'Kolkata',       s:'WB', d:'Kolkata',      ic:'🏙️'},
+        {n:'Vijayawada',    s:'AP', d:'Krishna',      ic:'🏙️'},
+        {n:'Tirupati',      s:'AP', d:'Tirupati',     ic:'🏙️'},
+    ];
+    var ALIASES = {'krishnankoil':'krishnankovil','srivilliputtur':'srivilliputhur','bangalore':'bengaluru','trivandrum':'thiruvananthapuram'};
+
+    function localMatch(q){
+        var ql = q.toLowerCase().replace(/\s+/g,'');
+        var norm = ALIASES[ql] || ql;
+        return LOCAL.filter(function(p){
+            var nl = p.n.toLowerCase().replace(/\s+/g,'');
+            return nl.startsWith(norm) || nl.startsWith(ql) || p.n.toLowerCase().indexOf(q.toLowerCase())>=0;
+        });
+    }
+    function localHTML(matches){
+        return matches.map(function(p){
+            return '<div class="hac-item hac-local" data-val="'+p.n+'">'+
+                '<span>'+p.ic+'</span>'+
+                '<div><div class="hac-n">'+p.n+'</div><div class="hac-s">'+p.d+', '+p.s+'</div></div>'+
+                '<span style="font-size:0.58rem;background:rgba(255,87,34,0.15);color:#FF5722;padding:1px 6px;border-radius:10px;margin-left:auto;flex-shrink:0;">Local</span>'+
+                '</div>';
+        }).join('');
+    }
+
     var timers={}, cache={}, active={};
+
     function setup(inpId, dropId){
         var inp = document.getElementById(inpId);
         var drop = document.getElementById(dropId);
@@ -1640,7 +1693,7 @@ document.addEventListener('DOMContentLoaded', () => {
             var v = this.value.trim();
             clearTimeout(timers[inpId]);
             if(v.length < 2){ drop.classList.remove('show'); drop.innerHTML=''; return; }
-            timers[inpId] = setTimeout(function(){ fetchAC(v, inp, drop, inpId); }, 350);
+            timers[inpId] = setTimeout(function(){ fetchAC(v, inp, drop, inpId); }, 300);
         });
         inp.addEventListener('keydown', function(e){
             var items = drop.querySelectorAll('.hac-item');
@@ -1656,39 +1709,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function hl(items,idx){ items.forEach(function(el,i){ el.classList.toggle('hac-active',i===idx); }); if(idx>=0) items[idx].scrollIntoView({block:'nearest'}); }
     function close_(drop){ drop.classList.remove('show'); drop.innerHTML=''; }
+
     function fetchAC(q, inp, drop, inpId){
-        if(cache[q]){ renderAC(cache[q], inp, drop, inpId); return; }
-        drop.innerHTML='<div class="hac-item" style="color:#aaa;font-style:italic;">Searching…</div>';
+        var lm = localMatch(q);
+        var lh = localHTML(lm);
+
+        if(cache[q]){
+            var ah = apiHTML(cache[q]);
+            drop.innerHTML = lh + (ah ? '<div class="hac-item" style="color:#aaa;font-size:0.68rem;pointer-events:none;">── Other places ──</div>'+ah : '');
+            drop.classList.add('show');
+            attachClicks(drop, inp);
+            return;
+        }
+
+        // Show local matches instantly
+        drop.innerHTML = lh + '<div class="hac-item" style="color:#aaa;font-style:italic;font-size:0.78rem;">Searching more…</div>';
         drop.classList.add('show');
+        attachClicks(drop, inp);
+
         fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&countrycodes=in&limit=8&format=json&addressdetails=1', {headers:{'Accept-Language':'en'}})
         .then(function(r){ return r.json(); })
-        .then(function(res){ cache[q]=res; renderAC(res, inp, drop, inpId); })
-        .catch(function(){ drop.innerHTML='<div class="hac-item" style="color:#c00;">⚠️ Connection error</div>'; });
+        .then(function(res){
+            cache[q] = res;
+            var ah = apiHTML(res);
+            drop.innerHTML = lh + (ah ? '<div class="hac-item" style="color:#aaa;font-size:0.68rem;pointer-events:none;">── Other places ──</div>'+ah : '');
+            drop.classList.add('show');
+            attachClicks(drop, inp);
+        })
+        .catch(function(){
+            if(!lm.length) drop.innerHTML='<div class="hac-item" style="color:#c00;">⚠️ Connection error</div>';
+        });
     }
-    function renderAC(results, inp, drop, inpId){
-        active[inpId] = -1;
-        if(!results || !results.length){
-            drop.innerHTML='<div class="hac-item" style="color:#aaa;">No places found in India</div>';
-            drop.classList.add('show'); return;
-        }
+
+    function apiHTML(results){
+        if(!results||!results.length) return '';
         var seen=new Set(), html='';
-        results.forEach(function(r, i){
+        results.forEach(function(r){
             var name = r.address.city||r.address.town||r.address.village||r.address.hamlet||r.display_name.split(',')[0];
             var key = name.toLowerCase();
             if(seen.has(key)) return; seen.add(key);
             var state = r.address.state||'';
-            var icon = r.type==='city'||r.type==='town' ? '🏙️' : r.type==='village'||r.type==='hamlet' ? '🏘️' : '📍';
-            html += '<div class="hac-item" data-val="'+name+'" data-i="'+i+'"><span>'+icon+'</span><div><div class="hac-n">'+name+'</div><div class="hac-s">'+state+'</div></div></div>';
+            var icon = r.type==='city'||r.type==='town'?'🏙️':r.type==='village'||r.type==='hamlet'?'🏘️':'📍';
+            html += '<div class="hac-item" data-val="'+name+'"><span>'+icon+'</span><div><div class="hac-n">'+name+'</div><div class="hac-s">'+state+'</div></div></div>';
         });
-        drop.innerHTML = html; drop.classList.add('show');
-        drop.querySelectorAll('.hac-item').forEach(function(item){
+        return html;
+    }
+
+    function attachClicks(drop, inp){
+        drop.querySelectorAll('.hac-item[data-val]').forEach(function(item){
             item.addEventListener('mouseenter', function(){
-                active[inpId] = parseInt(this.dataset.i||0);
-                drop.querySelectorAll('.hac-item').forEach(function(el,i){ el.classList.toggle('hac-active', i===active[inpId]); });
+                drop.querySelectorAll('.hac-item').forEach(function(el){ el.classList.remove('hac-active'); });
+                this.classList.add('hac-active');
             });
-            item.addEventListener('click', function(){ inp.value=this.dataset.val; close_(drop); });
+            item.addEventListener('click', function(){ inp.value=this.dataset.val; close_(drop); inp.focus(); });
         });
     }
+
     setup('heroOrigin', 'heroOriginDrop');
     setup('heroDest',   'heroDestDrop');
 })();
