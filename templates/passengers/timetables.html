@@ -470,62 +470,84 @@
     const MIN_CHARS   = 2;
 
     /* ── Local priority places (shown first, even if Nominatim misses them) ── */
+    /* icon: 'T'=town/village, 'C'=city */
     const LOCAL_PLACES = [
-        {name:'Krishnankovil',    state:'TN', district:'Virudhunagar', icon:'🏘️'},
-        {name:'Srivilliputhur',   state:'TN', district:'Virudhunagar', icon:'🏘️'},
-        {name:'Virudhunagar',     state:'TN', district:'Virudhunagar', icon:'🏙️'},
-        {name:'Madurai',          state:'TN', district:'Madurai',      icon:'🏙️'},
-        {name:'Chennai',          state:'TN', district:'Chennai',      icon:'🏙️'},
-        {name:'Coimbatore',       state:'TN', district:'Coimbatore',   icon:'🏙️'},
-        {name:'Trichy',           state:'TN', district:'Tiruchirappalli', icon:'🏙️'},
-        {name:'Tirunelveli',      state:'TN', district:'Tirunelveli',  icon:'🏙️'},
-        {name:'Tenkasi',          state:'TN', district:'Tenkasi',      icon:'🏘️'},
-        {name:'Rajapalayam',      state:'TN', district:'Virudhunagar', icon:'🏘️'},
-        {name:'Sivakasi',         state:'TN', district:'Virudhunagar', icon:'🏘️'},
-        {name:'Aruppukottai',     state:'TN', district:'Virudhunagar', icon:'🏘️'},
-        {name:'Watrap',           state:'TN', district:'Virudhunagar', icon:'🏘️'},
-        {name:'Sattur',           state:'TN', district:'Virudhunagar', icon:'🏘️'},
-        {name:'Tirumangalam',     state:'TN', district:'Madurai',      icon:'🏘️'},
-        {name:'Dindigul',         state:'TN', district:'Dindigul',     icon:'🏙️'},
-        {name:'Salem',            state:'TN', district:'Salem',        icon:'🏙️'},
-        {name:'Bengaluru',        state:'KA', district:'Bengaluru',    icon:'🏙️'},
-        {name:'Thiruvananthapuram',state:'KL',district:'Thiruvananthapuram',icon:'🏙️'},
-        {name:'Nagercoil',        state:'TN', district:'Kanyakumari',  icon:'🏙️'},
-        {name:'Kanyakumari',      state:'TN', district:'Kanyakumari',  icon:'🏘️'},
-        {name:'Thoothukudi',      state:'TN', district:'Thoothukudi',  icon:'🏙️'},
-        {name:'Kumbakonam',       state:'TN', district:'Thanjavur',    icon:'🏘️'},
-        {name:'Thanjavur',        state:'TN', district:'Thanjavur',    icon:'🏙️'},
-        {name:'Vellore',          state:'TN', district:'Vellore',      icon:'🏙️'},
-        {name:'Erode',            state:'TN', district:'Erode',        icon:'🏙️'},
-        {name:'Hyderabad',        state:'TS', district:'Hyderabad',    icon:'🏙️'},
-        {name:'Mumbai',           state:'MH', district:'Mumbai',       icon:'🏙️'},
-        {name:'Delhi',            state:'DL', district:'Delhi',        icon:'🏙️'},
-        {name:'Kolkata',          state:'WB', district:'Kolkata',      icon:'🏙️'},
-        {name:'Vijayawada',       state:'AP', district:'Krishna',      icon:'🏙️'},
-        {name:'Tirupati',         state:'AP', district:'Tirupati',     icon:'🏙️'},
+        {name:'Krishnankovil',     state:'TN', district:'Virudhunagar',      type:'T'},
+        {name:'Srivilliputhur',    state:'TN', district:'Virudhunagar',      type:'T'},
+        {name:'Virudhunagar',      state:'TN', district:'Virudhunagar',      type:'C'},
+        {name:'Madurai',           state:'TN', district:'Madurai',           type:'C'},
+        {name:'Chennai',           state:'TN', district:'Chennai',           type:'C'},
+        {name:'Coimbatore',        state:'TN', district:'Coimbatore',        type:'C'},
+        {name:'Trichy',            state:'TN', district:'Tiruchirappalli',   type:'C'},
+        {name:'Tirunelveli',       state:'TN', district:'Tirunelveli',       type:'C'},
+        {name:'Tenkasi',           state:'TN', district:'Tenkasi',           type:'T'},
+        {name:'Rajapalayam',       state:'TN', district:'Virudhunagar',      type:'T'},
+        {name:'Sivakasi',          state:'TN', district:'Virudhunagar',      type:'T'},
+        {name:'Aruppukottai',      state:'TN', district:'Virudhunagar',      type:'T'},
+        {name:'Watrap',            state:'TN', district:'Virudhunagar',      type:'T'},
+        {name:'Sattur',            state:'TN', district:'Virudhunagar',      type:'T'},
+        {name:'Tirumangalam',      state:'TN', district:'Madurai',           type:'T'},
+        {name:'Dindigul',          state:'TN', district:'Dindigul',          type:'C'},
+        {name:'Salem',             state:'TN', district:'Salem',             type:'C'},
+        {name:'Bengaluru',         state:'KA', district:'Bengaluru Urban',   type:'C'},
+        {name:'Thiruvananthapuram',state:'KL', district:'Thiruvananthapuram',type:'C'},
+        {name:'Nagercoil',         state:'TN', district:'Kanyakumari',       type:'C'},
+        {name:'Kanyakumari',       state:'TN', district:'Kanyakumari',       type:'T'},
+        {name:'Thoothukudi',       state:'TN', district:'Thoothukudi',       type:'C'},
+        {name:'Kumbakonam',        state:'TN', district:'Thanjavur',         type:'T'},
+        {name:'Thanjavur',         state:'TN', district:'Thanjavur',         type:'C'},
+        {name:'Vellore',           state:'TN', district:'Vellore',           type:'C'},
+        {name:'Erode',             state:'TN', district:'Erode',             type:'C'},
+        {name:'Hyderabad',         state:'TS', district:'Hyderabad',         type:'C'},
+        {name:'Mumbai',            state:'MH', district:'Mumbai',            type:'C'},
+        {name:'Delhi',             state:'DL', district:'Delhi',             type:'C'},
+        {name:'Kolkata',           state:'WB', district:'Kolkata',           type:'C'},
+        {name:'Vijayawada',        state:'AP', district:'Krishna',           type:'C'},
+        {name:'Tirupati',          state:'AP', district:'Tirupati',          type:'C'},
     ];
 
+    /* Aliases: wrong spelling → correct name in list */
+    const _LOCAL_ALIASES = {
+        'krishnankoil':'krishnankovil',
+        'krishnan koil':'krishnankovil',
+        'srivilliputtur':'srivilliputhur',
+        'srivilliputur':'srivilliputhur',
+        'sriviliputhur':'srivilliputhur',
+        'sriviliputhur':'srivilliputhur',
+        'srvilliputhur':'srivilliputhur',
+        'bangalore':'bengaluru',
+        'bengalore':'bengaluru',
+        'trivandrum':'thiruvananthapuram',
+        'tvm':'thiruvananthapuram',
+        'madras':'chennai',
+        'bombay':'mumbai',
+        'calcutta':'kolkata',
+    };
+
     function matchLocal(query){
-        const q = query.toLowerCase().replace(/\s+/g,'');
-        return LOCAL_PLACES.filter(p => {
-            const n = p.name.toLowerCase().replace(/\s+/g,'');
-            // match aliases too
-            const aliases = {'krishnankoil':'krishnankovil','srivilliputtur':'srivilliputhur','bangalore':'bengaluru','trivandrum':'thiruvananthapuram'};
-            const norm = aliases[q] || q;
-            return n.startsWith(norm) || n.startsWith(q) || p.name.toLowerCase().includes(query.toLowerCase());
+        var q   = query.toLowerCase().trim();
+        var qnr = q.replace(/\s+/g,'');
+        var norm = _LOCAL_ALIASES[q] || _LOCAL_ALIASES[qnr] || qnr;
+        return LOCAL_PLACES.filter(function(p){
+            var nl = p.name.toLowerCase();
+            var nr = nl.replace(/\s+/g,'');
+            return nr.startsWith(norm)
+                || nr.startsWith(qnr)
+                || nl.startsWith(q)
+                || nl.indexOf(q) >= 0;
         });
     }
 
-    function renderLocalItems(matches, input, dropdown, inputId){
-        return matches.map((p, i) => `
-            <div class="ac-item ac-local" data-value="${p.name}" data-idx="L${i}">
-                <span class="ac-icon">${p.icon}</span>
-                <div>
-                    <div class="ac-name">${p.name}</div>
-                    <div class="ac-state">${p.district}, ${p.state}</div>
-                </div>
-                <span style="font-size:0.6rem;background:rgba(255,87,34,0.12);color:#FF5722;padding:1px 6px;border-radius:10px;margin-left:auto;flex-shrink:0;">Local</span>
-            </div>`).join('');
+    function renderLocalItems(matches){
+        return matches.map(function(p, i){
+            var ic = p.type === 'C' ? '&#127961;' : '&#127960;'; /* city vs town (HTML entity - no emoji issues) */
+            return '<div class="ac-item ac-local" data-value="' + p.name + '" data-idx="L' + i + '">'
+                + '<span class="ac-icon">' + ic + '</span>'
+                + '<div><div class="ac-name">' + p.name + '</div>'
+                + '<div class="ac-state">' + p.district + ', ' + p.state + '</div></div>'
+                + '<span style="font-size:0.6rem;background:rgba(255,87,34,0.12);color:#FF5722;padding:1px 6px;border-radius:10px;margin-left:auto;flex-shrink:0;">Local</span>'
+                + '</div>';
+        }).join('');
     }
 
     /* State Abbreviation lookup */
@@ -613,7 +635,7 @@
     function fetchSuggestions(query, input, dropdown, inputId){
         // Step 1 — show local matches instantly
         const localMatches = matchLocal(query);
-        const localHTML    = renderLocalItems(localMatches, input, dropdown, inputId);
+        const localHTML    = renderLocalItems(localMatches);
 
         if(_cache[query]){
             const apiHTML = buildApiHTML(_cache[query]);

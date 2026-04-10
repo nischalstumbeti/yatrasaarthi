@@ -1630,55 +1630,68 @@ document.addEventListener('DOMContentLoaded', () => {
    CITY AUTOCOMPLETE — Local priority + Nominatim
 ═══════════════════════════════════════ */
 (function(){
+    /* type: C=city, T=town/village */
     var LOCAL = [
-        {n:'Krishnankovil', s:'TN', d:'Virudhunagar', ic:'🏘️'},
-        {n:'Srivilliputhur',s:'TN', d:'Virudhunagar', ic:'🏘️'},
-        {n:'Virudhunagar',  s:'TN', d:'Virudhunagar', ic:'🏙️'},
-        {n:'Madurai',       s:'TN', d:'Madurai',      ic:'🏙️'},
-        {n:'Chennai',       s:'TN', d:'Chennai',      ic:'🏙️'},
-        {n:'Coimbatore',    s:'TN', d:'Coimbatore',   ic:'🏙️'},
-        {n:'Trichy',        s:'TN', d:'Tiruchirappalli',ic:'🏙️'},
-        {n:'Tirunelveli',   s:'TN', d:'Tirunelveli',  ic:'🏙️'},
-        {n:'Tenkasi',       s:'TN', d:'Tenkasi',      ic:'🏘️'},
-        {n:'Rajapalayam',   s:'TN', d:'Virudhunagar', ic:'🏘️'},
-        {n:'Sivakasi',      s:'TN', d:'Virudhunagar', ic:'🏘️'},
-        {n:'Aruppukottai',  s:'TN', d:'Virudhunagar', ic:'🏘️'},
-        {n:'Watrap',        s:'TN', d:'Virudhunagar', ic:'🏘️'},
-        {n:'Sattur',        s:'TN', d:'Virudhunagar', ic:'🏘️'},
-        {n:'Tirumangalam',  s:'TN', d:'Madurai',      ic:'🏘️'},
-        {n:'Dindigul',      s:'TN', d:'Dindigul',     ic:'🏙️'},
-        {n:'Salem',         s:'TN', d:'Salem',        ic:'🏙️'},
-        {n:'Nagercoil',     s:'TN', d:'Kanyakumari',  ic:'🏙️'},
-        {n:'Thoothukudi',   s:'TN', d:'Thoothukudi',  ic:'🏙️'},
-        {n:'Erode',         s:'TN', d:'Erode',        ic:'🏙️'},
-        {n:'Vellore',       s:'TN', d:'Vellore',      ic:'🏙️'},
-        {n:'Thanjavur',     s:'TN', d:'Thanjavur',    ic:'🏙️'},
-        {n:'Bengaluru',     s:'KA', d:'Bengaluru',    ic:'🏙️'},
-        {n:'Hyderabad',     s:'TS', d:'Hyderabad',    ic:'🏙️'},
-        {n:'Thiruvananthapuram',s:'KL',d:'Thiruvananthapuram',ic:'🏙️'},
-        {n:'Mumbai',        s:'MH', d:'Mumbai',       ic:'🏙️'},
-        {n:'Delhi',         s:'DL', d:'Delhi',        ic:'🏙️'},
-        {n:'Kolkata',       s:'WB', d:'Kolkata',      ic:'🏙️'},
-        {n:'Vijayawada',    s:'AP', d:'Krishna',      ic:'🏙️'},
-        {n:'Tirupati',      s:'AP', d:'Tirupati',     ic:'🏙️'},
+        {n:'Krishnankovil',     s:'TN', d:'Virudhunagar',       t:'T'},
+        {n:'Srivilliputhur',    s:'TN', d:'Virudhunagar',       t:'T'},
+        {n:'Virudhunagar',      s:'TN', d:'Virudhunagar',       t:'C'},
+        {n:'Madurai',           s:'TN', d:'Madurai',            t:'C'},
+        {n:'Chennai',           s:'TN', d:'Chennai',            t:'C'},
+        {n:'Coimbatore',        s:'TN', d:'Coimbatore',         t:'C'},
+        {n:'Trichy',            s:'TN', d:'Tiruchirappalli',    t:'C'},
+        {n:'Tirunelveli',       s:'TN', d:'Tirunelveli',        t:'C'},
+        {n:'Tenkasi',           s:'TN', d:'Tenkasi',            t:'T'},
+        {n:'Rajapalayam',       s:'TN', d:'Virudhunagar',       t:'T'},
+        {n:'Sivakasi',          s:'TN', d:'Virudhunagar',       t:'T'},
+        {n:'Aruppukottai',      s:'TN', d:'Virudhunagar',       t:'T'},
+        {n:'Watrap',            s:'TN', d:'Virudhunagar',       t:'T'},
+        {n:'Sattur',            s:'TN', d:'Virudhunagar',       t:'T'},
+        {n:'Tirumangalam',      s:'TN', d:'Madurai',            t:'T'},
+        {n:'Dindigul',          s:'TN', d:'Dindigul',           t:'C'},
+        {n:'Salem',             s:'TN', d:'Salem',              t:'C'},
+        {n:'Nagercoil',         s:'TN', d:'Kanyakumari',        t:'C'},
+        {n:'Thoothukudi',       s:'TN', d:'Thoothukudi',        t:'C'},
+        {n:'Erode',             s:'TN', d:'Erode',              t:'C'},
+        {n:'Vellore',           s:'TN', d:'Vellore',            t:'C'},
+        {n:'Thanjavur',         s:'TN', d:'Thanjavur',          t:'C'},
+        {n:'Bengaluru',         s:'KA', d:'Bengaluru Urban',    t:'C'},
+        {n:'Hyderabad',         s:'TS', d:'Hyderabad',          t:'C'},
+        {n:'Thiruvananthapuram',s:'KL', d:'Thiruvananthapuram', t:'C'},
+        {n:'Mumbai',            s:'MH', d:'Mumbai',             t:'C'},
+        {n:'Delhi',             s:'DL', d:'Delhi',              t:'C'},
+        {n:'Kolkata',           s:'WB', d:'Kolkata',            t:'C'},
+        {n:'Vijayawada',        s:'AP', d:'Krishna',            t:'C'},
+        {n:'Tirupati',          s:'AP', d:'Tirupati',           t:'C'},
     ];
-    var ALIASES = {'krishnankoil':'krishnankovil','srivilliputtur':'srivilliputhur','bangalore':'bengaluru','trivandrum':'thiruvananthapuram'};
+
+    var ALIASES = {
+        'krishnankoil':'krishnankovil','krishnan koil':'krishnankovil',
+        'srivilliputtur':'srivilliputhur','srivilliputur':'srivilliputhur',
+        'srvilliputhur':'srivilliputhur','sriviliputhur':'srivilliputhur',
+        'bangalore':'bengaluru','bengalore':'bengaluru',
+        'trivandrum':'thiruvananthapuram','tvm':'thiruvananthapuram',
+        'madras':'chennai','bombay':'mumbai','calcutta':'kolkata',
+    };
 
     function localMatch(q){
-        var ql = q.toLowerCase().replace(/\s+/g,'');
-        var norm = ALIASES[ql] || ql;
+        var ql  = q.toLowerCase().trim();
+        var qnr = ql.replace(/\s+/g,'');
+        var norm = ALIASES[ql] || ALIASES[qnr] || qnr;
         return LOCAL.filter(function(p){
-            var nl = p.n.toLowerCase().replace(/\s+/g,'');
-            return nl.startsWith(norm) || nl.startsWith(ql) || p.n.toLowerCase().indexOf(q.toLowerCase())>=0;
+            var nl  = p.n.toLowerCase();
+            var nr  = nl.replace(/\s+/g,'');
+            return nr.startsWith(norm) || nr.startsWith(qnr) || nl.startsWith(ql) || nl.indexOf(ql) >= 0;
         });
     }
+
     function localHTML(matches){
         return matches.map(function(p){
-            return '<div class="hac-item hac-local" data-val="'+p.n+'">'+
-                '<span>'+p.ic+'</span>'+
-                '<div><div class="hac-n">'+p.n+'</div><div class="hac-s">'+p.d+', '+p.s+'</div></div>'+
-                '<span style="font-size:0.58rem;background:rgba(255,87,34,0.15);color:#FF5722;padding:1px 6px;border-radius:10px;margin-left:auto;flex-shrink:0;">Local</span>'+
-                '</div>';
+            var ic = p.t === 'C' ? '&#127961;' : '&#127960;';
+            return '<div class="hac-item hac-local" data-val="'+p.n+'">'
+                + '<span>'+ic+'</span>'
+                + '<div><div class="hac-n">'+p.n+'</div><div class="hac-s">'+p.d+', '+p.s+'</div></div>'
+                + '<span style="font-size:0.58rem;background:rgba(255,87,34,0.15);color:#FF5722;padding:1px 6px;border-radius:10px;margin-left:auto;flex-shrink:0;">Local</span>'
+                + '</div>';
         }).join('');
     }
 
