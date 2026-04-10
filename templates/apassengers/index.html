@@ -910,7 +910,7 @@
                         <span class="mode-tab on"><i class="bi bi-car-front-fill"></i> Car</span>
                         <span class="mode-tab on"><i class="bi bi-bicycle"></i> Bike</span>
                     </div>
-                    <form method="GET" action="{{ url_for('passenger_timetables') }}" class="row g-3">
+                    <form method="GET" action="{{ url_for('passenger_timetables') }}" class="row g-3" id="heroSearchForm" novalidate>
                         <div class="col-sm-5">
                             <label><i class="bi bi-geo-alt-fill" style="color:var(--orange);"></i> From</label>
                             <div class="hac-wrap">
@@ -927,16 +927,68 @@
                                 <div class="hac-drop" id="heroDestDrop"></div>
                             </div>
                         </div>
+                        <!-- Date picker -->
+                        <div class="col-sm-10">
+                            <label style="font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:4px;display:block;">
+                                <i class="bi bi-calendar3" style="color:var(--amber);"></i>
+                                Travel Date
+                                <span style="background:rgba(255,179,0,0.2);color:var(--amber);font-size:0.65rem;font-weight:700;padding:1px 8px;border-radius:20px;margin-left:6px;">Required</span>
+                            </label>
+                            <input type="date" id="heroDate" name="date"
+                                   min="{{ now().strftime('%Y-%m-%d') if now else '' }}"
+                                   style="width:100%;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:8px;padding:9px 14px;font-size:0.88rem;color:#fff;cursor:pointer;transition:border-color 0.2s;"
+                                   onfocus="this.style.borderColor='#FF5722'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">
+                            <div id="heroDateHint" style="font-size:0.7rem;color:#FF8A65;margin-top:3px;display:none;">
+                                <i class="bi bi-exclamation-circle"></i> Please select a travel date to search.
+                            </div>
+                        </div>
                         <div class="col-sm-2 d-flex align-items-end">
-                            <button type="submit" class="btn-hero-search">
+                            <button type="submit" id="heroSearchBtn" class="btn-hero-search" title="Select a date first">
                                 <i class="bi bi-search"></i>
                             </button>
                         </div>
                     </form>
+                    <script>
+                    (function(){
+                        var dateIn  = document.getElementById('heroDate');
+                        var hint    = document.getElementById('heroDateHint');
+                        var btn     = document.getElementById('heroSearchBtn');
+                        var form    = document.getElementById('heroSearchForm');
+
+                        // Set today as default
+                        var today = new Date();
+                        var yyyy  = today.getFullYear();
+                        var mm    = String(today.getMonth()+1).padStart(2,'0');
+                        var dd    = String(today.getDate()).padStart(2,'0');
+                        dateIn.min   = yyyy+'-'+mm+'-'+dd;
+                        dateIn.value = yyyy+'-'+mm+'-'+dd;   // default = today
+
+                        function updateBtn(){
+                            var ok = dateIn.value.trim() !== '';
+                            btn.style.opacity = ok ? '1' : '0.5';
+                            btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+                            hint.style.display = ok ? 'none' : '';
+                        }
+
+                        dateIn.addEventListener('change', updateBtn);
+                        dateIn.addEventListener('input',  updateBtn);
+
+                        form.addEventListener('submit', function(e){
+                            if(!dateIn.value.trim()){
+                                e.preventDefault();
+                                hint.style.display = 'block';
+                                dateIn.style.borderColor = '#e53935';
+                                setTimeout(function(){ dateIn.style.borderColor='rgba(255,255,255,0.15)'; }, 2000);
+                            }
+                        });
+
+                        updateBtn();
+                    })();
+                    </script>
                     <div class="mt-3 d-flex gap-2 flex-wrap">
                         {% set quick = [('Madurai','Chennai'),('Sivakasi','Coimbatore'),('Srivilliputhur','Madurai')] %}
                         {% for f,t in quick %}
-                        <a href="{{ url_for('passenger_timetables', origin=f, destination=t) }}"
+                        <a href="{{ url_for('passenger_timetables', origin=f, destination=t, date=today_date) }}"
                            style="font-size:0.7rem;color:rgba(255,255,255,0.5);text-decoration:none;background:rgba(255,255,255,0.07);padding:3px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);transition:all 0.2s;"
                            onmouseover="this.style.background='rgba(255,87,34,0.2)';this.style.color='#FF8A65'"
                            onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.color='rgba(255,255,255,0.5)'">

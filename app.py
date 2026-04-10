@@ -1266,8 +1266,11 @@ def logs():
 @app.route('/apassengers')
 @app.route('/passengers')
 def passengers_home():
+    from datetime import date as _d
     active_services = db.session.query(BusService).filter(BusService.is_active == True).order_by(BusService.service_number).all()
-    return render_template('apassengers/index.html', active_services=active_services)
+    return render_template('apassengers/index.html',
+                           active_services=active_services,
+                           today_date=_d.today().strftime('%Y-%m-%d'))
 
 # Helper function to get weather data
 def get_weather_data(city_name):
