@@ -832,9 +832,6 @@
         <a href="{{ url_for('passenger_timetables') }}">
             <i class="bi bi-map-fill"></i> <span>Plan Trip</span>
         </a>
-        <a href="{{ url_for('weather_page') }}">
-            <i class="bi bi-cloud-sun-fill"></i> <span>Weather</span>
-        </a>
         <a href="{{ url_for('train_map') }}">
             <i class="bi bi-train-front-fill"></i> <span>Train Map</span>
         </a>
@@ -1221,14 +1218,14 @@
                 </a>
             </div>
             <div class="col-6 col-md-4 col-lg-2">
-                <a href="{{ url_for('weather_page') }}" class="service-card">
+                <a href="{{ url_for('passenger_timetables') }}" class="service-card">
                     <div class="card-icon-wrap ci-teal">
                         <i class="bi bi-cloud-sun-fill"></i>
                     </div>
                     <div class="svc-body">
-                        <div class="svc-title">Weather</div>
-                        <div class="svc-desc">Live weather for all routes</div>
-                        <div class="svc-action" style="color:#00838F;"><i class="bi bi-arrow-right-circle-fill"></i> Check</div>
+                        <div class="svc-title">Weather + Trip</div>
+                        <div class="svc-desc">Weather shown with search results</div>
+                        <div class="svc-action" style="color:#00838F;"><i class="bi bi-arrow-right-circle-fill"></i> Search</div>
                     </div>
                 </a>
             </div>

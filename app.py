@@ -5327,6 +5327,72 @@ def weather_page():
                            city=city, cities=PLACES_LIST)
 
 
+@app.route('/api/weather')
+def api_weather():
+    """Return weather + travel suggestions for a city as JSON."""
+    city = request.args.get('city', '').strip()
+    if not city:
+        return jsonify({'error': 'city required'}), 400
+
+    # Normalise city spelling
+    _ALIASES = {
+        'krishnankoil': 'Krishnankovil', 'krishnan koil': 'Krishnankovil',
+        'srivilliputtur': 'Srivilliputhur', 'bangalore': 'Bengaluru',
+        'trivandrum': 'Thiruvananthapuram', 'bombay': 'Mumbai',
+        'calcutta': 'Kolkata', 'madras': 'Chennai',
+    }
+    city_norm = _ALIASES.get(city.lower(), city.title())
+
+    weather = get_weather_data(city_norm)
+    if not weather:
+        # Try original casing
+        weather = get_weather_data(city)
+
+    if not weather:
+        return jsonify({'status': 'unavailable', 'city': city_norm, 'weather': None, 'suggestions': []})
+
+    suggestions = get_weather_recommendations(weather, city_norm)
+
+    # Extra travel-mode suggestions
+    condition = (weather.get('condition') or '').lower()
+    temp      = weather.get('temperature', 30)
+    travel_tips = []
+
+    if condition in ['rain', 'drizzle', 'rainy', 'thunderstorm']:
+        travel_tips.append({'icon': '&#128665;', 'color': '#1565C0', 'text': 'Prefer train or bus over bike in wet weather.'})
+        travel_tips.append({'icon': '&#9749;',   'color': '#E65100', 'text': 'Roads may be slippery — allow extra travel time.'})
+    elif condition == 'thunderstorm':
+        travel_tips.append({'icon': '&#9889;',   'color': '#B71C1C', 'text': 'Avoid road travel if possible. Take train.'})
+    elif temp > 38:
+        travel_tips.append({'icon': '&#9728;',   'color': '#E65100', 'text': 'Very hot! Prefer AC bus or train. Carry water.'})
+    elif temp < 15:
+        travel_tips.append({'icon': '&#129398;', 'color': '#1565C0', 'text': 'Cool weather — good for road travel.'})
+    else:
+        travel_tips.append({'icon': '&#9989;',   'color': '#2E7D32', 'text': 'Good weather for travel. All modes available.'})
+
+    cond_icon = {
+        'clear': '&#9728;', 'clouds': '&#9925;', 'rain': '&#127783;',
+        'drizzle': '&#127783;', 'thunderstorm': '&#9928;', 'snow': '&#10052;',
+        'mist': '&#127787;', 'haze': '&#127787;', 'fog': '&#127787;',
+    }.get(condition, '&#127782;')
+
+    return jsonify({
+        'status':      'ok',
+        'city':        city_norm,
+        'weather': {
+            'temperature': weather.get('temperature'),
+            'feels_like':  weather.get('feels_like'),
+            'description': weather.get('description'),
+            'humidity':    weather.get('humidity'),
+            'wind_speed':  weather.get('wind_speed'),
+            'condition':   condition,
+            'icon':        cond_icon,
+        },
+        'suggestions': [s.get('message','') for s in suggestions],
+        'travel_tips': travel_tips,
+    })
+
+
 @app.route('/train-map')
 def train_map():
     origin = request.args.get('origin', '').strip()

@@ -282,7 +282,6 @@
     <div class="nav-links">
         <a href="{{ url_for('passengers_home') }}"><i class="bi bi-house-fill"></i> Home</a>
         <a href="{{ url_for('passenger_timetables') }}" class="active"><i class="bi bi-map-fill"></i> Plan Trip</a>
-        <a href="{{ url_for('weather_page') }}"><i class="bi bi-cloud-sun-fill"></i> Weather</a>
         <a href="{{ url_for('train_map') }}"><i class="bi bi-train-front-fill"></i> Train Map</a>
         <a href="{{ url_for('tourism_page') }}"><i class="bi bi-camera-fill"></i> Tourism</a>
         <a href="{{ url_for('travel_guide') }}"><i class="bi bi-journal-richtext"></i> Guide</a>
@@ -713,6 +712,108 @@
 <div class="container flex-grow-1 pb-4">
 
     {% if origin and destination %}
+
+    <!-- ══════════ WEATHER CARDS ══════════ -->
+    <div id="weatherSection" style="margin-bottom:1rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" id="weatherGrid">
+            <div id="weatherOrigin" class="weather-card-wrap"></div>
+            <div id="weatherDest"   class="weather-card-wrap"></div>
+        </div>
+        <div id="weatherTips" style="margin-top:0.5rem;"></div>
+    </div>
+
+    <style>
+    .w-card {
+        background:#fff;border-radius:12px;padding:0.85rem 1rem;
+        box-shadow:0 2px 10px rgba(0,0,0,0.07);border:1px solid #E5E9F0;
+        display:flex;align-items:center;gap:0.85rem;
+    }
+    .w-icon { font-size:2rem;flex-shrink:0;line-height:1; }
+    .w-city { font-size:0.7rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em; }
+    .w-temp { font-size:1.4rem;font-weight:800;font-family:'Poppins',sans-serif;color:#0B1F3A;line-height:1.1; }
+    .w-desc { font-size:0.75rem;color:#555;margin-top:1px; }
+    .w-meta { font-size:0.68rem;color:#aaa;margin-top:3px; }
+    .w-tips {
+        background:linear-gradient(135deg,#fff8e1,#fff3cd);
+        border-left:4px solid #FFB300;border-radius:0 8px 8px 0;
+        padding:0.6rem 1rem;font-size:0.8rem;color:#555;
+        display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;
+    }
+    .w-tip-badge {
+        display:inline-flex;align-items:center;gap:4px;
+        background:#fff;border-radius:20px;padding:3px 10px;
+        font-size:0.75rem;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,0.08);
+    }
+    @media(max-width:576px){
+        #weatherGrid{grid-template-columns:1fr;}
+    }
+    </style>
+
+    <script>
+    (function(){
+        const origin = "{{ origin }}";
+        const dest   = "{{ destination }}";
+        if(!origin || !dest) return;
+
+        function renderCard(containerId, city, data){
+            var el = document.getElementById(containerId);
+            if(!el) return;
+            if(!data || data.status === 'unavailable'){
+                el.innerHTML = '';
+                return;
+            }
+            var w = data.weather;
+            el.innerHTML =
+                '<div class="w-card">'
+                +'<div class="w-icon">'+w.icon+'</div>'
+                +'<div style="flex:1;min-width:0;">'
+                +'<div class="w-city">'+city+'</div>'
+                +'<div class="w-temp">'+w.temperature+'&deg;C</div>'
+                +'<div class="w-desc">'+w.description+'</div>'
+                +'<div class="w-meta">Humidity '+w.humidity+'% &nbsp;|&nbsp; Wind '+w.wind_speed+' m/s</div>'
+                +'</div>'
+                +'</div>';
+        }
+
+        function renderTips(originData, destData){
+            var tips = [];
+            if(originData && originData.travel_tips) tips = tips.concat(originData.travel_tips);
+            if(destData   && destData.travel_tips)   tips = tips.concat(destData.travel_tips);
+            // deduplicate by text
+            var seen = new Set();
+            tips = tips.filter(function(t){ if(seen.has(t.text)) return false; seen.add(t.text); return true; });
+            if(!tips.length) return;
+            var tipsEl = document.getElementById('weatherTips');
+            if(!tipsEl) return;
+            var html = '<div class="w-tips"><strong style="color:#E65100;margin-right:4px;">&#9986; Travel Tips:</strong>';
+            tips.forEach(function(t){
+                html += '<span class="w-tip-badge" style="color:'+t.color+';">'+t.icon+' '+t.text+'</span>';
+            });
+            html += '</div>';
+            tipsEl.innerHTML = html;
+        }
+
+        var oData, dData;
+
+        fetch('/api/weather?city='+encodeURIComponent(origin))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            oData = d;
+            renderCard('weatherOrigin', origin, d);
+            if(dData !== undefined) renderTips(oData, dData);
+        }).catch(function(){});
+
+        fetch('/api/weather?city='+encodeURIComponent(dest))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            dData = d;
+            renderCard('weatherDest', dest, d);
+            if(oData !== undefined) renderTips(oData, dData);
+        }).catch(function(){});
+    })();
+    </script>
+    <!-- ══════════ END WEATHER ══════════ -->
+
     <!-- ── Mode summary chips ── -->
     <div class="mode-strip">
         <a href="#sec-govt" class="mode-chip active">
