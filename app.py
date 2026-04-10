@@ -6618,10 +6618,14 @@ def api_live_trains():
 
         trains = _fetch_trains_erail(from_code, to_code, erail_date)
 
-        # ── Auto-retry: if nearest-used station returned 0 trains, try next
-        #    nearby stations (up to 5 retries, prefer stations >10 km away
-        #    since those are more likely on mainline routes) ──
-        if not trains and from_nearest_used:
+        # Track the original station before any retry
+        original_from_code = from_code
+        original_from_name = from_info[0] if from_info else from_code
+        station_switched   = False   # True when we fell back to a different station
+
+        # ── Auto-retry: if 0 trains found from ANY station (direct or nearest),
+        #    try up to 5 nearby stations sorted by distance ──────────────────────
+        if not trains:
             orig_coords = CITY_COORDS.get(origin_lower)
             if orig_coords:
                 import math as _m
@@ -6642,15 +6646,16 @@ def api_live_trains():
 
                 for alt_dist, alt_code, alt_info in candidates[:5]:
                     try:
-                        # Use shorter 10s timeout for retries to avoid long delays
                         alt_trains = _fetch_trains_erail(alt_code, to_code, erail_date, timeout=10)
                     except Exception:
                         alt_trains = []
                     if alt_trains:
-                        trains = alt_trains
-                        from_code = alt_code
-                        from_info = alt_info
+                        trains           = alt_trains
+                        from_code        = alt_code
+                        from_info        = alt_info
                         from_nearest_dist = round(alt_dist, 1)
+                        from_nearest_used = True
+                        station_switched  = True
                         break
 
         return jsonify({
@@ -6661,9 +6666,15 @@ def api_live_trains():
             'trains':    trains,
             'count':     len(trains),
             'date':      journey_date,
-            'from_nearest_used': from_nearest_used, 'from_nearest_dist': from_nearest_dist,
-            'to_nearest_used':   to_nearest_used,   'to_nearest_dist':   to_nearest_dist,
-            'origin_city': origin_city, 'dest_city': dest_city,
+            'from_nearest_used':   from_nearest_used,
+            'from_nearest_dist':   from_nearest_dist,
+            'to_nearest_used':     to_nearest_used,
+            'to_nearest_dist':     to_nearest_dist,
+            'origin_city':         origin_city,
+            'dest_city':           dest_city,
+            'station_switched':    station_switched,
+            'original_from_code':  original_from_code,
+            'original_from_name':  original_from_name,
         })
 
     except Exception as e:

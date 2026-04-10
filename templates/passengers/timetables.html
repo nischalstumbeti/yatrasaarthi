@@ -1508,19 +1508,43 @@ function loadLiveTrains(){
         const boardingNotice = document.getElementById('boardingNotice');
         if(data.from_code && data.to_code){
             const distTag = data.from_nearest_dist
-                ? ` &nbsp;<span style="background:#FFF3E0;color:#E65100;border-radius:4px;padding:1px 6px;font-size:0.7rem;">📍 ${data.from_nearest_dist} km from ${data.origin_city}</span>`
+                ? ` &nbsp;<span style="background:#FFF3E0;color:#E65100;border-radius:4px;padding:1px 6px;font-size:0.7rem;">&#128205; ${data.from_nearest_dist} km from ${data.origin_city}</span>`
                 : '';
             if(stationBar){
-                stationBar.innerHTML = `🚂 &nbsp;<strong>${data.from_code}</strong> ${data.from_name}${distTag} &nbsp;→&nbsp; <strong>${data.to_code}</strong> ${data.to_name}`;
+                stationBar.innerHTML = `&#128642; &nbsp;<strong>${data.from_code}</strong> ${data.from_name}${distTag} &nbsp;&rarr;&nbsp; <strong>${data.to_code}</strong> ${data.to_name}`;
                 stationBar.style.display = 'block';
             }
-            if(boardingNotice && data.from_nearest_used){
-                boardingNotice.style.display = 'block';
-                boardingNotice.innerHTML = `<div style="background:#E3F2FD;border-left:4px solid #1565C0;padding:0.6rem 1rem;font-size:0.8rem;color:#0D47A1;margin-bottom:0.25rem;">
-                    🚉 &nbsp;No direct station in <strong>${data.origin_city}</strong> — showing trains from nearest station &nbsp;<strong>${data.from_code} · ${data.from_name}</strong>&nbsp; (${data.from_nearest_dist} km away). Depart times below are from <strong>${data.from_code}</strong>.
-                </div>`;
-            } else if(boardingNotice){
-                boardingNotice.style.display = 'none';
+
+            if(boardingNotice){
+                if(data.station_switched){
+                    /* Case: original station (e.g. SVPR) returned 0 trains →
+                       system retried and found trains from a nearby station (e.g. VPT) */
+                    boardingNotice.style.display = 'block';
+                    boardingNotice.innerHTML =
+                        `<div style="background:#FFF8E1;border-left:4px solid #FFA000;padding:0.75rem 1.25rem;font-size:0.82rem;color:#555;margin-bottom:0.25rem;display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;">
+                            <span style="font-size:1.1rem;">&#9888;&#65039;</span>
+                            <span>
+                                <strong style="color:#E65100;">Trains from ${data.original_from_name} (${data.original_from_code}) are not available</strong>
+                                between <strong>${data.original_from_code}</strong> and <strong>${data.to_code}</strong>.
+                                &nbsp;&#8594;&nbsp;
+                                Showing trains from the nearest available station:
+                                <strong style="color:#1565C0;">${data.from_name} (${data.from_code})</strong>
+                                ${data.from_nearest_dist ? `— ${data.from_nearest_dist} km away` : ''}.
+                                Departure times below are from <strong>${data.from_code}</strong>.
+                            </span>
+                        </div>`;
+                } else if(data.from_nearest_used){
+                    /* Case: city has no direct station, using nearest */
+                    boardingNotice.style.display = 'block';
+                    boardingNotice.innerHTML =
+                        `<div style="background:#E3F2FD;border-left:4px solid #1565C0;padding:0.6rem 1rem;font-size:0.8rem;color:#0D47A1;margin-bottom:0.25rem;">
+                            &#128649; &nbsp;No direct station in <strong>${data.origin_city}</strong> &mdash;
+                            showing trains from nearest station &nbsp;<strong>${data.from_code} &middot; ${data.from_name}</strong>&nbsp;
+                            (${data.from_nearest_dist} km away). Depart times below are from <strong>${data.from_code}</strong>.
+                        </div>`;
+                } else {
+                    boardingNotice.style.display = 'none';
+                }
             }
         }
 
