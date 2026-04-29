@@ -6,10 +6,10 @@
     <title>Yatra Saarthi – India's Smart Travel Portal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateInit" async></script>
     <style>
         :root {
+            --font-sans: Verdana, Tahoma, Geneva, sans-serif;
             --navy:   #0B1F3A;
             --blue:   #1A3A5C;
             --deep:   #061326;
@@ -25,8 +25,8 @@
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-        body {
-            font-family: 'Inter', 'Poppins', sans-serif;
+        body { 
+            font-family: var(--font-sans);
             background: var(--light);
             color: var(--text);
             min-height: 100vh;
@@ -34,7 +34,7 @@
             flex-direction: column;
         }
         h1,h2,h3,h4,h5,h6,.fw-bold,.fw-700,.fw-800 {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-sans);
         }
 
         /* ══════════════════════════════
@@ -44,7 +44,7 @@
             background: linear-gradient(90deg, #FF5722 0%, #E64A19 100%);
             color: #fff;
             font-size: 0.7rem;
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-sans);
             letter-spacing: 0.02em;
             padding: 5px 0;
             overflow: hidden;
@@ -86,7 +86,7 @@
             box-shadow: 0 4px 12px rgba(255,87,34,0.4);
         }
         .brand-text { display: flex; flex-direction: column; line-height: 1.1; }
-        .brand-title { font-family: 'Poppins', sans-serif; font-weight: 800; font-size: 1rem; color: #fff; letter-spacing: 0.01em; }
+        .brand-title { font-family: var(--font-sans); font-weight: 800; font-size: 1rem; color: #fff; letter-spacing: 0.01em; }
         .brand-sub { font-size: 0.58rem; color: var(--amber); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
         .nav-links { display: flex; align-items: center; gap: 0.15rem; margin-left: auto; }
         .nav-links a {
@@ -117,7 +117,7 @@
             border: 1px solid rgba(255,255,255,0.15);
             color: rgba(255,255,255,0.75); border-radius: 6px;
             padding: 3px 9px; font-size: 0.68rem; cursor: pointer;
-            transition: all 0.2s; font-family: 'Inter', sans-serif;
+            transition: all 0.2s; font-family: var(--font-sans);
         }
         .lang-btns button:hover, .lang-btns button.active {
             background: var(--orange); border-color: var(--orange); color: #fff;
@@ -166,7 +166,7 @@
             backdrop-filter: blur(4px);
         }
         .hero h1 {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-sans);
             font-size: clamp(1.9rem, 4vw, 3.2rem);
             font-weight: 800;
             line-height: 1.15;
@@ -199,7 +199,7 @@
         .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,87,34,0.5); color: #fff; }
         .hero-stats { display: flex; gap: 1.75rem; margin-top: 2rem; flex-wrap: wrap; }
         .hero-stat { display: flex; flex-direction: column; }
-        .hero-stat .num { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--amber); }
+        .hero-stat .num { font-family: var(--font-sans); font-size: 1.5rem; font-weight: 800; color: var(--amber); }
         .hero-stat .lbl { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; }
 
         /* Search card */
@@ -213,7 +213,7 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
         .search-card-title {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-sans);
             font-weight: 700; font-size: 0.85rem;
             color: rgba(255,255,255,0.9);
             margin-bottom: 1.25rem;
@@ -237,7 +237,7 @@
             border: 1.5px solid rgba(255,255,255,0.2);
             color: var(--navy);
             font-size: 0.87rem;
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-sans);
             border-radius: 10px;
             padding: 0.6rem 0.9rem;
             transition: all 0.2s;
@@ -256,7 +256,7 @@
             width: 100%;
             box-shadow: 0 4px 14px rgba(255,87,34,0.4);
             transition: all 0.2s;
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-sans);
         }
         .btn-hero-search:hover { background: linear-gradient(135deg, #E64A19, var(--orange)); transform: translateY(-1px); }
 
@@ -462,7 +462,7 @@
             color: var(--orange); margin-bottom: 0.4rem;
         }
         .section-title {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-sans);
             font-size: 1.6rem; font-weight: 800;
             color: var(--navy); line-height: 1.2;
         }
@@ -518,7 +518,7 @@
         .ci-blue::after { background: #2196F3; }
 
         .svc-body { padding: 1rem 1.25rem 1.25rem; }
-        .svc-title { font-family: 'Poppins', sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--navy); margin-bottom: 0.3rem; }
+        .svc-title { font-family: var(--font-sans); font-size: 0.92rem; font-weight: 700; color: var(--navy); margin-bottom: 0.3rem; }
         .svc-desc  { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.75rem; line-height: 1.5; }
         .svc-action {
             font-size: 0.73rem; font-weight: 700;
@@ -554,7 +554,7 @@
             margin-bottom: 1.25rem;
         }
         .district-title {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-sans);
             font-size: 0.68rem; font-weight: 700;
             letter-spacing: 0.1em; text-transform: uppercase;
             color: var(--amber);
@@ -601,7 +601,7 @@
             border-radius: 10px; padding: 0.5rem 1rem;
         }
         .cov-chip .cov-num {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-sans);
             font-weight: 800; font-size: 1.1rem; color: var(--amber);
         }
         .cov-chip .cov-lbl { font-size: 0.68rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -617,7 +617,7 @@
         .panel-tag {
             display: inline-flex; align-items: center; gap: 0.4rem;
             background: linear-gradient(135deg, var(--navy), var(--blue));
-            color: var(--amber); font-family: 'Poppins', sans-serif;
+            color: var(--amber); font-family: var(--font-sans);
             font-weight: 700; font-size: 0.82rem;
             padding: 6px 16px; border-radius: 8px;
             box-shadow: 0 4px 12px rgba(11,31,58,0.2);
@@ -695,7 +695,7 @@
             background: linear-gradient(135deg, var(--navy), var(--blue));
             padding: 0.85rem 1.25rem;
             display: flex; align-items: center; gap: 0.6rem;
-            font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.85rem;
+            font-family: var(--font-sans); font-weight: 700; font-size: 0.85rem;
             color: var(--amber);
         }
         .route-item {
@@ -723,7 +723,7 @@
             box-shadow: 0 4px 20px rgba(11,31,58,0.25);
             margin-top: 1rem;
         }
-        .help-card .help-title { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 0.88rem; color: var(--amber); margin-bottom: 0.5rem; }
+        .help-card .help-title { font-family: var(--font-sans); font-weight: 700; font-size: 0.88rem; color: var(--amber); margin-bottom: 0.5rem; }
         .help-card .help-text { font-size: 0.77rem; color: rgba(255,255,255,0.65); line-height: 1.6; }
         .help-card .help-email { font-size: 0.75rem; color: rgba(255,200,0,0.8); margin-top: 0.75rem; }
 
@@ -736,7 +736,7 @@
         }
         .stat-item { text-align: center; }
         .stat-num {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-sans);
             font-size: 2rem; font-weight: 800; color: var(--amber);
             line-height: 1;
         }
@@ -752,7 +752,7 @@
             padding: 1.25rem 0;
             margin-top: auto;
         }
-        footer .foot-brand { color: var(--amber); font-weight: 700; font-family: 'Poppins', sans-serif; }
+        footer .foot-brand { color: var(--amber); font-weight: 700; font-family: var(--font-sans); }
         footer small { font-size: 0.72rem; }
         footer a { color: rgba(255,200,0,0.7); text-decoration: none; }
         footer a:hover { color: var(--amber); }
@@ -773,7 +773,7 @@
         .hac-item {
             padding: 8px 14px; cursor: pointer;
             font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
-            border-bottom: 1px solid #f5f5f5; font-family: 'Inter', sans-serif;
+            border-bottom: 1px solid #f5f5f5; font-family: var(--font-sans);
         }
         .hac-item:last-child { border-bottom: none; }
         .hac-item:hover, .hac-item.hac-active { background: #FFF3E0; }
@@ -814,7 +814,7 @@
         🚀 Powered by Nextlinkers · KARE University – Design Build Operate
         &nbsp;&nbsp;
     </span>
-</div>
+                </div>
 
 <!-- Navbar -->
 <nav class="main-nav">
@@ -823,7 +823,7 @@
         <div class="brand-text">
             <span class="brand-title">Yatra Saarthi</span>
             <span class="brand-sub">Smart Travel Portal</span>
-        </div>
+            </div>
     </a>
     <div class="nav-links">
         <a href="{{ url_for('passengers_home') }}" class="active">
@@ -865,7 +865,7 @@
                 <div class="hero-badge">
                     <i class="bi bi-compass-fill"></i>
                     India's Smart Travel Portal
-                </div>
+        </div>
                 <h1>
                     Travel <span class="highlight">Smarter,</span><br>
                     Reach <span class="accent">Faster</span>
@@ -899,14 +899,14 @@
                     <div class="search-card-title">
                         <span class="dot"></span>
                         Quick Trip Search
-                    </div>
+            </div>
                     <div class="mode-tabs">
                         <span class="mode-tab on"><i class="bi bi-bus-front-fill"></i> Bus</span>
                         <span class="mode-tab on"><i class="bi bi-train-front-fill"></i> Train</span>
                         <span class="mode-tab on"><i class="bi bi-airplane-fill"></i> Flight</span>
                         <span class="mode-tab on"><i class="bi bi-car-front-fill"></i> Car</span>
                         <span class="mode-tab on"><i class="bi bi-bicycle"></i> Bike</span>
-                    </div>
+        </div>
                     <form method="GET" action="{{ url_for('passenger_timetables') }}" class="row g-3" id="heroSearchForm" novalidate>
                         <div class="col-sm-5">
                             <label><i class="bi bi-geo-alt-fill" style="color:var(--orange);"></i> From</label>
@@ -992,11 +992,11 @@
                             {{ f }} → {{ t }}
                         </a>
                         {% endfor %}
-                    </div>
+            </div>
                 </div>
             </div>
         </div>
-    </div>
+        </div>
 
     <!-- ══ TRANSPORT ANIMATION SCENE ══ -->
 
@@ -1029,7 +1029,7 @@
                 <!-- Contrail -->
                 <line x1="8" y1="14" x2="-20" y2="14" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-dasharray="4 6"/>
             </svg>
-        </div>
+            </div>
 
         <!-- Airplane 2 (small, background) -->
         <div class="plane2">
@@ -1041,7 +1041,7 @@
             </svg>
         </div>
     </div>
-
+    
     <!-- RAIL: train layer -->
     <div class="anim-rail">
         <div class="rail-ties"></div>
@@ -1194,7 +1194,7 @@
 
 <!-- ══ SERVICES ══ -->
 <section class="services-section">
-    <div class="container">
+        <div class="container">
         <div class="row align-items-end mb-4">
             <div class="col">
                 <div class="section-label">What We Offer</div>
@@ -1233,14 +1233,14 @@
                 <a href="{{ url_for('train_map') }}" class="service-card">
                     <div class="card-icon-wrap ci-purple">
                         <i class="bi bi-train-front-fill"></i>
-                    </div>
+        </div>
                     <div class="svc-body">
                         <div class="svc-title">Train Map</div>
                         <div class="svc-desc">Railway network &amp; stations</div>
                         <div class="svc-action" style="color:#6A1B9A;"><i class="bi bi-arrow-right-circle-fill"></i> Explore</div>
-                    </div>
+        </div>
                 </a>
-            </div>
+    </div>
             <div class="col-6 col-md-4 col-lg-2">
                 <a href="{{ url_for('tourism_page') }}" class="service-card">
                     <div class="card-icon-wrap ci-green">
@@ -1297,8 +1297,8 @@
                     <i class="bi bi-geo-alt-fill" style="color:var(--orange);"></i>
                     Tamil Nadu &amp; surrounding states
                 </span>
-            </div>
-        </div>
+                        </div>
+                    </div>
 
         <div class="village-map-banner">
             <div class="vb-glow"></div>
@@ -1308,7 +1308,7 @@
                 <div class="village-district">
                     <div class="district-title">
                         <i class="bi bi-pin-map-fill"></i> Virudhunagar District
-                    </div>
+                </div>
                     <div class="village-pills">
                         {% set viru = [
                             ('Srivilliputhur','village'),('Krishnankovil','village'),
@@ -1326,14 +1326,14 @@
                             <span class="vdot"></span>{{ name }}
                         </a>
                         {% endfor %}
+                        </div>
                     </div>
-                </div>
 
                 <!-- Madurai District -->
                 <div class="village-district">
                     <div class="district-title">
                         <i class="bi bi-pin-map-fill"></i> Madurai District
-                    </div>
+                </div>
                     <div class="village-pills">
                         {% set madurai = [
                             ('Madurai','town'),('Melur','town'),('Tirumangalam','town'),
@@ -1348,14 +1348,14 @@
                             <span class="vdot"></span>{{ name }}
                         </a>
                         {% endfor %}
+                        </div>
                     </div>
-                </div>
 
                 <!-- Tirunelveli / Tenkasi -->
                 <div class="village-district">
                     <div class="district-title">
                         <i class="bi bi-pin-map-fill"></i> Tirunelveli &amp; Tenkasi
-                    </div>
+                </div>
                     <div class="village-pills">
                         {% set tirun = [
                             ('Tirunelveli','town'),('Tenkasi','town'),('Courtallam','village'),
@@ -1371,8 +1371,8 @@
                             <span class="vdot"></span>{{ name }}
                         </a>
                         {% endfor %}
+                        </div>
                     </div>
-                </div>
 
                 <!-- Theni / Dindigul -->
                 <div class="village-district">
@@ -1394,9 +1394,9 @@
                             <span class="vdot"></span>{{ name }}
                         </a>
                         {% endfor %}
-                    </div>
-                </div>
-
+            </div>
+        </div>
+            
                 <!-- Trichy / Salem / Coimbatore -->
                 <div class="village-district">
                     <div class="district-title">
@@ -1419,7 +1419,7 @@
                         </a>
                         {% endfor %}
                     </div>
-                </div>
+        </div>
 
                 <!-- Coverage summary chips -->
                 <div class="coverage-chips mt-3">
@@ -1427,8 +1427,8 @@
                         <div>
                             <div class="cov-num">80+</div>
                             <div class="cov-lbl">Villages</div>
-                        </div>
-                    </div>
+            </div>
+        </div>
                     <div class="cov-chip">
                         <div>
                             <div class="cov-num">5</div>
@@ -1473,7 +1473,7 @@
                         <div>Departs</div>
                         <div>Status</div>
                     </div>
-                    {% if active_services %}
+                        {% if active_services %}
                         {% for svc in active_services[:8] %}
                         <div class="dep-row">
                             <div class="dr-num">{{ svc.service_number or svc.bus_number or '—' }}</div>
@@ -1481,23 +1481,23 @@
                                 <div class="dr-cities">{{ svc.origin or '—' }} → {{ svc.destination or '—' }}</div>
                                 {% if svc.via_routes %}
                                 <span class="dr-via">via {{ svc.via_routes|join(', ') if svc.via_routes is iterable and svc.via_routes is not string }}</span>
-                                {% endif %}
-                            </div>
+                        {% endif %}
+                    </div>
                             <div class="dr-time">{{ svc.departure_time.strftime('%H:%M') if svc.departure_time else '--:--' }}</div>
                             <div class="dr-status">
                                 <span class="badge bg-{{ 'success' if svc.status == 'active' else 'warning text-dark' }}">
                                     {{ svc.status|title if svc.status else 'Active' }}
                                 </span>
-                            </div>
                         </div>
-                        {% endfor %}
-                    {% else %}
+                        </div>
+                                        {% endfor %}
+                                    {% else %}
                         <div class="dep-empty">
                             <i class="bi bi-display"></i>
                             No live services right now.<br>
                             <a href="{{ url_for('passenger_timetables') }}">View full timetable →</a>
                         </div>
-                    {% endif %}
+                                    {% endif %}
                 </div>
                 <div class="text-end mt-2">
                     <a href="{{ url_for('passenger_timetables') }}"
@@ -1531,14 +1531,14 @@
                         <span class="to">{{ to_ }}</span>
                         <i class="bi bi-chevron-right go-icon"></i>
                     </a>
-                    {% endfor %}
-                </div>
+                                        {% endfor %}
+        </div>
 
                 <div class="help-card">
                     <div class="help-title"><i class="bi bi-headset me-2"></i>Need Help?</div>
                     <div class="help-text">Contact our support team for route queries, timetable info or booking assistance.</div>
                     <div class="help-email"><i class="bi bi-envelope me-1"></i> 99230041300@klu.ac.in</div>
-                </div>
+                        </div>
             </div>
         </div>
     </div>
@@ -1570,11 +1570,11 @@
                 <div class="stat-item">
                     <div class="stat-num">KARE</div>
                     <div class="stat-lbl">Design Build Operate</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
 <!-- ══ FOOTER ══ -->
 <footer>
@@ -1585,11 +1585,11 @@
             under Design Build Operate at
             <a href="#">KARE – Kalasalingam Academy of Research &amp; Education</a>
         </small>
-    </div>
-</footer>
+        </div>
+    </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
 /* Live clock */
 function updateClock() {
     const now = new Date();
@@ -1778,6 +1778,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setup('heroOrigin', 'heroOriginDrop');
     setup('heroDest',   'heroDestDrop');
 })();
-</script>
+    </script>
 </body>
 </html>

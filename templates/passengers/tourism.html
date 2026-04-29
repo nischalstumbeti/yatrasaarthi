@@ -6,12 +6,13 @@
     <title>Tourism Recommendations – Yatra Saarthi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tourism-cards.css') }}?v=2">
     <!-- Google Translate -->
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateInit" async></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body, * { font-family: 'Inter', sans-serif; }
-        h1,h2,h3,h4,h5,.fw-bold { font-family: 'Poppins', sans-serif; }
+        :root { --font-sans: Verdana, Tahoma, Geneva, sans-serif; --navy: #0B1F3A; }
+        body, * { font-family: var(--font-sans); }
+        h1,h2,h3,h4,h5,.fw-bold { font-family: var(--font-sans); }
         #translate-fab { position:fixed; bottom:80px; right:20px; z-index:9999; }
         #translate-fab .fab-btn { width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,#4285f4,#34a853); color:white; border:none; box-shadow:0 4px 16px rgba(0,0,0,0.4); font-size:1.3rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:transform 0.2s; }
         #translate-fab .fab-btn:hover { transform:scale(1.1); }
@@ -33,7 +34,8 @@
             border: 1px solid rgba(255,255,255,0.12);
             border-radius: 16px;
         }
-        .spot-card {
+        /* Popular destination tiles (bottom section) */
+        .dest-pop-card {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 14px;
@@ -41,20 +43,11 @@
             height: 100%;
             transition: all 0.3s;
         }
-        .spot-card:hover {
+        .dest-pop-card:hover {
             background: rgba(255,255,255,0.12);
             transform: translateY(-4px);
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
         }
-        .spot-emoji { font-size: 2.8rem; }
-        .type-badge {
-            font-size: 0.72rem;
-            padding: 0.25rem 0.7rem;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-        .rating-star { color: #ffc107; }
-        .info-row { display: flex; gap: 0.5rem; align-items: center; font-size: 0.82rem; color: #aaa; margin-top: 0.3rem; }
         .city-pill {
             background: rgba(255,255,255,0.08);
             border: 1px solid rgba(255,255,255,0.15);
@@ -76,23 +69,29 @@
             margin-bottom: 1.5rem;
         }
         footer { background: rgba(0,0,0,0.3); }
-        .type-Religious { background: rgba(255,100,0,0.3); color: #ffb07c; border: 1px solid rgba(255,100,0,0.4); }
-        .type-Heritage { background: rgba(180,130,50,0.3); color: #f5c842; border: 1px solid rgba(180,130,50,0.4); }
-        .type-Nature { background: rgba(0,180,80,0.3); color: #7adb7a; border: 1px solid rgba(0,180,80,0.4); }
-        .type-Beach { background: rgba(0,150,220,0.3); color: #7fd3f5; border: 1px solid rgba(0,150,220,0.4); }
-        .type-Museum { background: rgba(150,80,200,0.3); color: #d4a5f5; border: 1px solid rgba(150,80,200,0.4); }
-        .type-Hill { background: rgba(100,160,80,0.3); color: #b5e87a; border: 1px solid rgba(100,160,80,0.4); }
-        .type-Entertainment { background: rgba(220,50,150,0.3); color: #f5a5d0; border: 1px solid rgba(220,50,150,0.4); }
-        .type-default { background: rgba(100,100,100,0.3); color: #ccc; border: 1px solid rgba(100,100,100,0.4); }
     </style>
 </head>
 <body>
+{% macro tourism_spot_kind(t) -%}
+{%- set s = (t or '')|lower -%}
+{%- if 'religious' in s or 'temple' in s or 'mosque' in s or 'church' in s or 'shrine' in s or 'divya' in s %}religious
+{%- elif 'hill' in s %}hill
+{%- elif 'nature' in s or 'waterfall' in s or 'lake' in s or 'dam' in s %}nature
+{%- elif 'beach' in s %}beach
+{%- elif 'heritage' in s or 'unesco' in s or 'fort' in s or 'palace' in s %}heritage
+{%- elif 'museum' in s %}museum
+{%- elif 'city' in s %}city
+{%- elif 'local' in s %}local
+{%- elif 'industrial' in s %}industrial
+{%- else %}general
+{%- endif -%}
+{%- endmacro %}
 <style>
 .ys-nav{background:rgba(11,31,58,0.97);backdrop-filter:blur(12px);padding:0 2rem;height:64px;display:flex;align-items:center;position:sticky;top:0;z-index:1000;border-bottom:1px solid rgba(255,255,255,0.08);box-shadow:0 4px 20px rgba(0,0,0,0.3);}
 .ys-brand{display:flex;align-items:center;gap:0.5rem;text-decoration:none;flex-shrink:0;}
 .ys-logo{width:38px;height:38px;background:linear-gradient(135deg,#FF5722,#FF8A65);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;box-shadow:0 4px 12px rgba(255,87,34,0.4);}
 .ys-bt{display:flex;flex-direction:column;line-height:1.1;}
-.ys-bt .t1{font-family:'Poppins',sans-serif;font-weight:800;font-size:1rem;color:#fff;}
+.ys-bt .t1{font-family:var(--font-sans);font-weight:800;font-size:1rem;color:#fff;}
 .ys-bt .t2{font-size:0.58rem;color:#FFB300;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;}
 .ys-links{display:flex;align-items:center;gap:0.15rem;margin-left:auto;flex-wrap:wrap;}
 .ys-links a{color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.78rem;font-weight:500;padding:6px 12px;border-radius:8px;transition:all 0.2s;display:flex;align-items:center;gap:0.35rem;white-space:nowrap;}
@@ -183,43 +182,28 @@
         {% endfor %}
     </div>
 
-    <!-- Spots Grid -->
+    <!-- Spots Grid (same card system as Plan Trip / timetables) -->
     <div class="row g-4" id="spotsGrid">
         {% for spot in spots %}
         <div class="col-md-6 col-lg-4 spot-item" data-type="{{ spot.type }}">
-            <div class="spot-card">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="spot-emoji">{{ spot.emoji }}</div>
-                    {% set type_class = 'type-' + spot.type.split(' ')[0] %}
-                    <span class="type-badge {{ type_class }} type-default">{{ spot.type }}</span>
-                </div>
-                <h5 class="mb-1">{{ spot.name }}</h5>
-                <p class="text-muted small mb-2">{{ spot.description }}</p>
-                
-                <div class="info-row">
-                    <i class="bi bi-geo-alt-fill text-danger"></i>
-                    <span>{{ spot.distance }}</span>
-                </div>
-                <div class="info-row">
-                    <i class="bi bi-clock text-info"></i>
-                    <span>{{ spot.timings }}</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <div>
-                        {% for i in range(5) %}
-                        {% if i < spot.rating|int %}
-                        <span class="rating-star">★</span>
-                        {% else %}
-                        <span style="color:#444;">★</span>
-                        {% endif %}
-                        {% endfor %}
-                        <small class="ms-1 text-muted">{{ spot.rating }}</small>
+            <article class="ts-spot ts-spot--dest ts-spot--on-dark ts-kind-{{ tourism_spot_kind(spot.type) }} h-100">
+                <div class="ts-spot__top">
+                    <span class="ts-spot__emoji" aria-hidden="true">{{ spot.emoji }}</span>
+                    <div class="flex-grow-1 min-w-0">
+                        <h4 class="ts-spot__title">{{ spot.name }}</h4>
+                        {% if spot.type %}<span class="ts-spot__type">{{ spot.type }}</span>{% endif %}
                     </div>
-                    <span class="badge {% if spot.entry == 'Free' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-                        {{ spot.entry }}
-                    </span>
                 </div>
-            </div>
+                <p class="ts-spot__desc">{{ spot.description }}</p>
+                <div class="ts-spot__meta">
+                    {% if spot.distance %}<span class="ts-chip"><i class="bi bi-signpost-split"></i>{{ spot.distance }}</span>{% endif %}
+                    {% if spot.timings %}<span class="ts-chip"><i class="bi bi-clock"></i>{{ spot.timings }}</span>{% endif %}
+                    {% if spot.rating is defined and spot.rating not in (none, '') %}
+                    <span class="ts-chip ts-chip--rating" title="Rating"><i class="bi bi-star-fill"></i><strong>{{ spot.rating }}</strong></span>
+                    {% endif %}
+                    {% if spot.entry %}<span class="ts-chip"><i class="bi bi-ticket-perforated"></i>{{ spot.entry }}</span>{% endif %}
+                </div>
+            </article>
         </div>
         {% endfor %}
     </div>
@@ -280,7 +264,7 @@
         {% for city, info in dest_highlights.items() %}
         <div class="col-md-3 col-sm-6">
             <a href="{{ url_for('tourism_page', destination=city) }}" style="text-decoration:none;">
-                <div class="spot-card text-center">
+                <div class="dest-pop-card text-center">
                     <div style="font-size:3rem;">{{ info.emoji }}</div>
                     <h5 class="mt-2 mb-1">{{ city }}</h5>
                     <div class="badge bg-warning text-dark mb-2">{{ info.highlight }}</div>

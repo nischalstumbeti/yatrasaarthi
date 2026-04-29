@@ -1,6 +1,7 @@
 /* Custom styles for Bus Optimization Admin Panel */
 
 :root {
+    --font-sans: Verdana, Tahoma, Geneva, sans-serif;
     --primary: #0d6efd;
     --secondary: #6c757d;
     --success: #198754;
@@ -14,7 +15,7 @@
 
 /* General Styles */
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     background-color: #f5f7fb;
     color: #333;
 }

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, session
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, abort, session, Response, send_from_directory
 import random
 import json
 import logging
@@ -14,6 +14,8 @@ from werkzeug.exceptions import HTTPException, NotFound, BadRequest, Unauthorize
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 import os
+import time
+import base64
 try:
     import requests
 except ImportError:
@@ -813,6 +815,43 @@ class RealTimeBusStatus(db.Model):
             'last_updated': self.last_updated.strftime('%Y-%m-%d %H:%M:%S') if self.last_updated else None
         }
 
+
+class BusGPSTelemetry(db.Model):
+    """Latest GPS fix from an on-board device (Arduino / ESP32) for a specific route."""
+    __tablename__ = 'bus_gps_telemetry'
+
+    id = db.Column(db.Integer, primary_key=True)
+    route_key = db.Column(db.String(80), nullable=False, index=True)
+    device_id = db.Column(db.String(64), nullable=False, default='bus1')
+    bus_number = db.Column(db.String(40), nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    speed_kmh = db.Column(db.Float, default=0.0)
+    heading = db.Column(db.Float, nullable=True)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('route_key', 'device_id', name='uq_bus_gps_route_device'),
+    )
+
+    def to_live_dict(self, stale_seconds=120):
+        """stale_seconds: mark live=False if last update is older than this (default 120s)."""
+        now = datetime.utcnow()
+        age = (now - self.last_updated).total_seconds() if self.last_updated else 99999
+        return {
+            'bus_number': self.bus_number,
+            'device_id': self.device_id,
+            'latitude': round(float(self.latitude), 7),
+            'longitude': round(float(self.longitude), 7),
+            'speed_kmh': round(float(self.speed_kmh or 0), 2),
+            'heading': self.heading,
+            'last_updated': self.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') if self.last_updated else None,
+            'live': age <= stale_seconds,
+            'seconds_since_update': int(age),
+            'has_position': True,
+        }
+
+
 class EducationalInstitution(db.Model):
     """Educational institutions in the region"""
     __tablename__ = 'educational_institution'
@@ -901,6 +940,11 @@ class Landmark(db.Model):
             'description': self.description,
             'is_rest_point': self.is_rest_point
         }
+
+# Create missing tables (e.g. new models) without dropping existing data
+with app.app_context():
+    db.create_all()
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -947,6 +991,23 @@ def create_admin_account():
     if admin:
         return 'Admin user created successfully!', 200
     return 'Admin user already exists', 200
+@app.route('/favicon.ico')
+def favicon():
+    """Avoid 404 → error pages that extend base.html (fixes console 500 on anonymous /favicon.ico)."""
+    static_dir = os.path.join(app.root_path, 'static')
+    fp = os.path.join(static_dir, 'favicon.ico')
+    if os.path.isfile(fp):
+        return send_from_directory(static_dir, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    # 1×1 transparent PNG — valid favicon for modern browsers
+    return Response(
+        base64.b64decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+        ),
+        mimetype='image/png',
+        headers={'Cache-Control': 'public, max-age=86400'},
+    )
+
+
 @app.route('/')
 def index():
     return redirect(url_for('passengers_home'))
@@ -1271,80 +1332,6 @@ def passengers_home():
     return render_template('apassengers/index.html',
                            active_services=active_services,
                            today_date=_d.today().strftime('%Y-%m-%d'))
-
-# Helper function to get weather data
-def get_weather_data(city_name):
-    """Fetch weather data for a city using OpenWeatherMap API or fallback data."""
-    if not requests:
-        return None
-    
-    # City coordinates mapping (latitude, longitude)
-    CITY_COORDINATES = {
-        'Krishnankovil': (9.5, 77.8),
-        'Sivakasi': (9.45, 77.82),
-        'Srivilliputhur': (9.52, 77.63),
-        'Tirumangalam': (9.82, 78.08),
-        'Tenkasi': (8.95, 77.3),
-        'Rajapalayam': (9.45, 77.57),
-        'Madurai': (9.9252, 78.1198),
-        'Dindigul': (10.35, 77.95),
-        'Salem': (11.65, 78.17),
-        'Erode': (11.34, 77.73),
-        'Tiruppur': (11.11, 77.35),
-        'Hosur': (12.74, 77.83),
-        'Chennai': (13.0827, 80.2707),
-        'Bengaluru': (12.9716, 77.5946)
-    }
-    
-    coords = CITY_COORDINATES.get(city_name)
-    if not coords:
-        return None
-    
-    # Try to get API key from environment, otherwise use demo data
-    api_key = os.getenv('OPENWEATHER_API_KEY', 'demo')
-    
-    if api_key != 'demo' and requests:
-        try:
-            url = f"http://api.openweathermap.org/data/2.5/weather"
-            params = {
-                'lat': coords[0],
-                'lon': coords[1],
-                'appid': api_key,
-                'units': 'metric'
-            }
-            response = requests.get(url, params=params, timeout=5)
-            if response.status_code == 200:
-                data = response.json()
-                return {
-                    'temperature': round(data['main']['temp']),
-                    'feels_like': round(data['main']['feels_like']),
-                    'description': data['weather'][0]['description'].title(),
-                    'humidity': data['main']['humidity'],
-                    'wind_speed': data.get('wind', {}).get('speed', 0),
-                    'condition': data['weather'][0]['main'].lower(),
-                    'icon': data['weather'][0]['icon']
-                }
-        except Exception as e:
-            app.logger.error(f"Weather API error for {city_name}: {str(e)}")
-    
-    # Fallback demo data based on city
-    demo_conditions = {
-        'Krishnankovil': {'temp': 32, 'desc': 'Partly Cloudy', 'condition': 'clouds'},
-        'Chennai': {'temp': 35, 'desc': 'Sunny', 'condition': 'clear'},
-        'Bengaluru': {'temp': 28, 'desc': 'Partly Cloudy', 'condition': 'clouds'},
-        'Madurai': {'temp': 34, 'desc': 'Hot and Sunny', 'condition': 'clear'}
-    }
-    
-    demo = demo_conditions.get(city_name, {'temp': 30, 'desc': 'Moderate', 'condition': 'clear'})
-    return {
-        'temperature': demo['temp'],
-        'feels_like': demo['temp'] + random.randint(-2, 2),
-        'description': demo['desc'],
-        'humidity': random.randint(50, 80),
-        'wind_speed': round(random.uniform(5, 15), 1),
-        'condition': demo['condition'],
-        'icon': '01d'
-    }
 
 def get_weather_recommendations(weather_data, city_type='destination'):
     """Generate travel recommendations based on weather conditions."""
@@ -2669,7 +2656,7 @@ def ai_crowd_management():
         # Initialize default stops for Srivilliputhur → Madurai route
         default_stops = [
             {'name': 'Srivilliputhur', 'location': 'Srivilliputhur', 'impact_zone': None, 'lat': 9.5121, 'lng': 77.6336},
-            {'name': 'Krishnankovil', 'location': 'Krishnankovil', 'impact_zone': 'university', 'lat': 9.6231, 'lng': 77.8245},
+            {'name': 'Krishnankovil', 'location': 'Krishnankovil', 'impact_zone': 'university', 'lat': 9.572774, 'lng': 77.678473},
             {'name': 'Alagapuri', 'location': 'Alagapuri', 'impact_zone': None, 'lat': 9.6845, 'lng': 77.8567},
             {'name': 'T. Kalupatti', 'location': 'T. Kalupatti', 'impact_zone': None, 'lat': 9.7123, 'lng': 77.9123},
             {'name': 'Tirumangalam', 'location': 'Tirumangalam', 'impact_zone': None, 'lat': 9.8234, 'lng': 78.0456},
@@ -2811,57 +2798,306 @@ def api_generate_alerts():
     return jsonify({'alerts_generated': len(alerts_generated), 'alerts': alerts_generated})
 
 # ==================== WEATHER API INTEGRATION ====================
+# Real-time data: OpenWeatherMap (OPENWEATHER_API_KEY) or Open-Meteo (no key, geocoded).
+# In-memory cache (default 10 min) to limit API calls.
+
+_WEATHER_LIVE_CACHE = {}
+
+def _weather_cache_ttl():
+    try:
+        return max(60, min(3600, int(os.environ.get('WEATHER_CACHE_SECONDS', '600'))))
+    except (TypeError, ValueError):
+        return 600
+
+def _weather_cache_get(key):
+    t = _WEATHER_LIVE_CACHE.get(key)
+    if not t:
+        return None
+    ts, data = t
+    if time.time() - ts > _weather_cache_ttl():
+        return None
+    return data
+
+def _weather_cache_set(key, data):
+    _WEATHER_LIVE_CACHE[key] = (time.time(), data)
+
+
+# Preferred lat/lon for OpenWeather when city name might be ambiguous
+CITY_COORDINATES = {
+    'Krishnankovil': (9.572774, 77.678473),
+    'Sivakasi': (9.45, 77.82),
+    'Srivilliputhur': (9.52, 77.63),
+    'Tirumangalam': (9.82, 78.08),
+    'Tenkasi': (8.95, 77.3),
+    'Rajapalayam': (9.45, 77.57),
+    'Madurai': (9.9252, 78.1198),
+    'Dindigul': (10.35, 77.95),
+    'Salem': (11.65, 78.17),
+    'Erode': (11.34, 77.73),
+    'Tiruppur': (11.11, 77.35),
+    'Hosur': (12.74, 77.83),
+    'Chennai': (13.0827, 80.2707),
+    'Bengaluru': (12.9716, 77.5946),
+    'Thanjavur': (10.7870, 79.1378),
+    'Virudhunagar': (9.5819, 77.9624),
+    'Palani': (10.4500, 77.5200),
+    'Trichy': (10.7905, 78.7047),
+    'Tiruchirappalli': (10.7905, 78.7047),
+    'Coimbatore': (11.0168, 76.9558),
+}
+
+
+def _adv_key_from_api_condition(condition):
+    c = (condition or 'clouds').lower()
+    if c in ('rain', 'drizzle', 'thunderstorm'):
+        return 'rainy'
+    if c in ('mist', 'fog', 'haze', 'smoke', 'dust', 'sand', 'ash'):
+        return 'foggy'
+    if c == 'clear':
+        return 'sunny'
+    if c == 'clouds':
+        return 'cloudy'
+    if c == 'snow':
+        return 'partly_cloudy'
+    return 'partly_cloudy'
+
+
+def _wmo_code_to_condition(wmo):
+    """Map Open-Meteo WMO weather code to (api_condition, description)."""
+    try:
+        code = int(wmo)
+    except (TypeError, ValueError):
+        return 'clouds', 'Cloudy'
+    table = {
+        0: ('clear', 'Clear sky'),
+        1: ('clouds', 'Mainly clear'),
+        2: ('clouds', 'Partly cloudy'),
+        3: ('clouds', 'Overcast'),
+        45: ('mist', 'Fog'),
+        48: ('mist', 'Depositing rime fog'),
+        51: ('rain', 'Light drizzle'),
+        53: ('rain', 'Drizzle'),
+        55: ('rain', 'Dense drizzle'),
+        56: ('rain', 'Freezing drizzle'),
+        57: ('rain', 'Freezing drizzle'),
+        61: ('rain', 'Slight rain'),
+        63: ('rain', 'Moderate rain'),
+        65: ('rain', 'Heavy rain'),
+        66: ('rain', 'Freezing rain'),
+        67: ('rain', 'Freezing rain'),
+        71: ('snow', 'Slight snow'),
+        73: ('snow', 'Moderate snow'),
+        75: ('snow', 'Heavy snow'),
+        77: ('snow', 'Snow grains'),
+        80: ('rain', 'Rain showers'),
+        81: ('rain', 'Heavy rain showers'),
+        82: ('rain', 'Violent rain showers'),
+        85: ('snow', 'Snow showers'),
+        86: ('snow', 'Heavy snow showers'),
+        95: ('thunderstorm', 'Thunderstorm'),
+        96: ('thunderstorm', 'Thunderstorm with hail'),
+        99: ('thunderstorm', 'Thunderstorm with heavy hail'),
+    }
+    return table.get(code, ('clouds', 'Cloudy'))
+
+
+def _fetch_openweather_live(city_title):
+    api_key = (os.environ.get('OPENWEATHER_API_KEY') or '').strip()
+    if not api_key or api_key.lower() == 'demo' or not requests:
+        return None
+    city_key = city_title.strip()
+    coords = CITY_COORDINATES.get(city_key) or CITY_COORDINATES.get(city_key.title())
+    try:
+        url = 'https://api.openweathermap.org/data/2.5/weather'
+        params = {'appid': api_key, 'units': 'metric'}
+        if coords:
+            params['lat'] = coords[0]
+            params['lon'] = coords[1]
+        else:
+            params['q'] = f'{city_key},IN'
+        r = requests.get(url, params=params, timeout=10)
+        if r.status_code != 200:
+            app.logger.warning('OpenWeather HTTP %s for %s', r.status_code, city_title)
+            return None
+        data = r.json()
+        w = (data.get('weather') or [{}])[0]
+        main = data.get('main') or {}
+        wind = data.get('wind') or {}
+        return {
+            'temperature': round(main.get('temp', 0)),
+            'feels_like': round(main.get('feels_like', main.get('temp', 0))),
+            'description': (w.get('description') or 'Weather').title(),
+            'humidity': main.get('humidity'),
+            'wind_speed': round(float(wind.get('speed') or 0), 1),
+            'condition': (w.get('main') or 'Clouds').lower(),
+            'icon': w.get('icon', '02d'),
+            'source': 'openweathermap',
+        }
+    except Exception as e:
+        app.logger.error('OpenWeather error %s: %s', city_title, e)
+        return None
+
+
+def _fetch_open_meteo_live(city_title):
+    """Free current weather via Open-Meteo (no API key)."""
+    if not requests:
+        return None
+    try:
+        g = requests.get(
+            'https://geocoding-api.open-meteo.com/v1/search',
+            params={'name': city_title.strip(), 'count': 1, 'language': 'en', 'format': 'json'},
+            timeout=8,
+        )
+        if g.status_code != 200:
+            return None
+        gj = g.json()
+        results = gj.get('results') or []
+        if not results:
+            return None
+        lat = results[0]['latitude']
+        lon = results[0]['longitude']
+        r = requests.get(
+            'https://api.open-meteo.com/v1/forecast',
+            params={
+                'latitude': lat,
+                'longitude': lon,
+                'current': 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
+                'timezone': 'auto',
+            },
+            timeout=12,
+        )
+        if r.status_code != 200:
+            return None
+        fj = r.json()
+        cur = fj.get('current') or {}
+        wmo = cur.get('weather_code', 3)
+        cond, desc_text = _wmo_code_to_condition(wmo)
+        return {
+            'temperature': round(cur.get('temperature_2m', 0)),
+            'feels_like': round(cur.get('apparent_temperature', cur.get('temperature_2m', 0))),
+            'description': desc_text,
+            'humidity': cur.get('relative_humidity_2m'),
+            'wind_speed': round(float(cur.get('wind_speed_10m') or 0), 1),
+            'condition': cond,
+            'icon': '01d',
+            'source': 'open-meteo',
+        }
+    except Exception as e:
+        app.logger.error('Open-Meteo error %s: %s', city_title, e)
+        return None
+
+
+def _weather_demo_fallback(city_title):
+    """Offline placeholder when APIs are unreachable."""
+    demo_conditions = {
+        'Krishnankovil': {'temp': 32, 'desc': 'Demo data (API offline)', 'condition': 'clouds'},
+        'Chennai': {'temp': 35, 'desc': 'Demo data (API offline)', 'condition': 'clear'},
+        'Bengaluru': {'temp': 28, 'desc': 'Demo data (API offline)', 'condition': 'clouds'},
+        'Madurai': {'temp': 34, 'desc': 'Demo data (API offline)', 'condition': 'clear'},
+    }
+    key = city_title.strip().title()
+    demo = demo_conditions.get(key, {'temp': 30, 'desc': 'Weather unavailable (demo)', 'condition': 'clouds'})
+    return {
+        'temperature': demo['temp'],
+        'feels_like': demo['temp'] + random.randint(-2, 2),
+        'description': demo['desc'],
+        'humidity': random.randint(50, 80),
+        'wind_speed': round(random.uniform(2, 12), 1),
+        'condition': demo['condition'],
+        'icon': '02d',
+        'source': 'demo',
+    }
+
 
 def get_weather_data(location, target_date=None):
     """
-    Fetch weather data for a location (using OpenWeatherMap API or fallback)
-    Returns weather advisory based on conditions
+    Current conditions from OpenWeatherMap (if OPENWEATHER_API_KEY) or Open-Meteo.
+    Cached in memory ~10 minutes. Updates WeatherData for today.
     """
+    if not location:
+        return None
+    loc = str(location).strip()
+    if not loc:
+        return None
     if target_date is None:
         target_date = date.today()
-    
-    # Check if we have cached weather data
-    weather = WeatherData.query.filter_by(
-        location=location,
-        date=target_date
-    ).first()
-    
-    if weather and (datetime.utcnow() - weather.updated_at).total_seconds() < 3600:
-        return weather.to_dict()
-    
-    # Simulate weather API call (in production, use OpenWeatherMap API)
-    # For demo, generate realistic weather data
-    conditions = ['sunny', 'cloudy', 'rainy', 'foggy', 'partly_cloudy']
-    weights = [0.4, 0.2, 0.2, 0.1, 0.1]  # More sunny days
-    
-    condition = random.choices(conditions, weights=weights)[0]
-    temperature = random.randint(25, 35) if condition != 'rainy' else random.randint(20, 28)
-    humidity = random.randint(60, 90) if condition == 'rainy' else random.randint(40, 70)
-    
-    # Generate advisory based on condition
-    advisory = generate_weather_advisory(condition, location)
-    
-    # Save or update weather data
-    if weather:
-        weather.condition = condition
-        weather.temperature = temperature
-        weather.humidity = humidity
-        weather.advisory = advisory
-        weather.updated_at = datetime.utcnow()
-    else:
-        weather = WeatherData(
-            location=location,
-            date=target_date,
-            condition=condition,
-            temperature=temperature,
-            humidity=humidity,
-            forecast=f"{condition.capitalize()} with temperature around {temperature}°C",
-            advisory=advisory
-        )
-        db.session.add(weather)
-    
-    db.session.commit()
-    return weather.to_dict()
+
+    if target_date != date.today():
+        wrow = WeatherData.query.filter_by(location=loc, date=target_date).first()
+        if wrow:
+            d = wrow.to_dict()
+            if not d.get('description') and d.get('forecast'):
+                d['description'] = d['forecast']
+            return d
+        return None
+
+    ck = loc.title()
+    cached = _weather_cache_get(ck)
+    if cached:
+        return cached
+
+    live = None
+    if requests:
+        live = _fetch_openweather_live(loc)
+        if not live:
+            live = _fetch_open_meteo_live(loc)
+    if not live:
+        live = _weather_demo_fallback(loc)
+
+    cond = live.get('condition') or 'clouds'
+    adv_key = _adv_key_from_api_condition(cond)
+    advisory = generate_weather_advisory(adv_key, loc)
+    t = live.get('temperature')
+    desc = live.get('description') or ''
+    forecast = f"{desc} · ~{t}°C" if t is not None else desc
+
+    out = {
+        'location': loc,
+        'date': date.today().strftime('%Y-%m-%d'),
+        'temperature': t,
+        'feels_like': live.get('feels_like'),
+        'condition': cond,
+        'humidity': live.get('humidity'),
+        'wind_speed': live.get('wind_speed'),
+        'description': desc,
+        'forecast': forecast,
+        'advisory': advisory,
+        'icon': live.get('icon'),
+        'source': live.get('source', 'unknown'),
+    }
+
+    wrow = None
+    try:
+        wrow = WeatherData.query.filter_by(location=loc, date=date.today()).first()
+        if wrow:
+            wrow.condition = cond
+            wrow.temperature = t
+            wrow.humidity = live.get('humidity')
+            wrow.wind_speed = live.get('wind_speed')
+            wrow.forecast = forecast
+            wrow.advisory = advisory
+            wrow.updated_at = datetime.utcnow()
+        else:
+            wrow = WeatherData(
+                location=loc,
+                date=date.today(),
+                condition=cond,
+                temperature=t,
+                humidity=live.get('humidity'),
+                wind_speed=live.get('wind_speed'),
+                forecast=forecast,
+                advisory=advisory,
+            )
+            db.session.add(wrow)
+        db.session.commit()
+        out['id'] = wrow.id
+    except Exception as e:
+        db.session.rollback()
+        app.logger.warning('Weather DB persist skipped: %s', e)
+
+    _weather_cache_set(ck, out)
+    return out
+
 
 def generate_weather_advisory(condition, location):
     """Generate weather-aware travel advisory"""
@@ -4262,7 +4498,7 @@ def initialize_local_buses():
     """Initialize local bus services for focus cities"""
     focus_cities = {
         'Srivilliputhur': {'lat': 9.5121, 'lng': 77.6336},
-        'Krishnankovil': {'lat': 9.6231, 'lng': 77.8245},
+        'Krishnankovil': {'lat': 9.572774, 'lng': 77.678473},
         'Madurai': {'lat': 9.9252, 'lng': 78.1198},
         'Chennai': {'lat': 13.0827, 'lng': 80.2707},
         'Bengaluru': {'lat': 12.9716, 'lng': 77.5946},
@@ -4560,9 +4796,9 @@ def get_coordinates(location_name):
     # Predefined coordinates for key locations
     location_coords = {
         'Kalasalingam University': (9.7072, 77.5076),
-        'Krishnankovil': (9.6231, 77.8245),
-        'Krishnankovil Junction': (9.6231, 77.8245),
-        'Krishnankovil Bus Stop': (9.6231, 77.8245),
+        'Krishnankovil': (9.572774, 77.678473),
+        'Krishnankovil Junction': (9.572774, 77.678473),
+        'Krishnankovil Bus Stop': (9.572774, 77.678473),
         'Srivilliputhur': (9.5121, 77.6336),
         'Srivilliputhur Bus Stand': (9.5121, 77.6336),
         'Tiruthangal': (9.4833, 77.8167),
@@ -4628,7 +4864,7 @@ def plan_travel_route(origin, destination):
             'instruction': f'Walk or take an auto from {origin} to Krishnankovil Bus Stop',
             'distance_km': 0.8,
             'approx_duration_min': 10,
-            'coordinates': [9.6231, 77.8245],
+            'coordinates': [9.572774, 77.678473],
             'landmarks': ['Krishnankovil Junction']
         })
         total_distance += 0.8
@@ -4733,7 +4969,7 @@ def get_landmarks_near_route(route_coords, radius_km=5):
     """Get landmarks (tea stalls, ATMs, petrol bunks) near the route"""
     # Predefined landmarks
     all_landmarks = [
-        {'name': 'Krishnankovil Tea Stall', 'type': 'tea_stall', 'location': 'Krishnankovil', 'lat': 9.6231, 'lng': 77.8245},
+        {'name': 'Krishnankovil Tea Stall', 'type': 'tea_stall', 'location': 'Krishnankovil', 'lat': 9.572774, 'lng': 77.678473},
         {'name': 'Srivilliputhur ATM', 'type': 'atm', 'location': 'Srivilliputhur', 'lat': 9.5121, 'lng': 77.6336},
         {'name': 'Srivilliputhur Petrol Bunk', 'type': 'petrol_bunk', 'location': 'Srivilliputhur', 'lat': 9.5150, 'lng': 77.6350},
         {'name': 'Tiruthangal Tea Stall', 'type': 'tea_stall', 'location': 'Tiruthangal', 'lat': 9.4833, 'lng': 77.8167},
@@ -5019,7 +5255,7 @@ def passenger_timetables():
     trains        = []
     flights       = []
     road_info     = None
-
+    
     if origin and destination:
         ol, dl = origin.lower(), destination.lower()
 
@@ -5030,7 +5266,7 @@ def passenger_timetables():
                 and_(func.lower(LocalBus.origin)==dl, func.lower(LocalBus.destination)==ol)
             )
         ).order_by(LocalBus.departure_time).all()
-
+        
         private_buses = PrivateOperator.query.filter(
             PrivateOperator.is_active == True,
             or_(
@@ -5058,7 +5294,7 @@ def passenger_timetables():
         private_buses = PrivateOperator.query.filter_by(is_active=True).order_by(PrivateOperator.departure_time).limit(50).all()
         trains        = []   # live from erail.in API
         flights       = FlightSchedule.query.filter_by(is_active=True).order_by(FlightSchedule.departure_time).limit(20).all()
-
+    
     all_cities = set()
     for b in LocalBus.query.with_entities(LocalBus.origin, LocalBus.destination).all():
         all_cities.update([b.origin, b.destination])
@@ -5066,18 +5302,27 @@ def passenger_timetables():
         all_cities.update([b.origin, b.destination])
 
     from datetime import date as _tdate
+    show_live_bus_map = bool(
+        origin and destination
+        and _gps_route_key(origin, destination) in GPS_ENABLED_ROUTE_KEYS
+    )
+    route_tourism = None
+    if origin and destination:
+        route_tourism = tourism_bundle_for_timetables(origin, destination, local_buses)
     return render_template('passengers/timetables.html',
-                           local_buses=local_buses,
-                           private_buses=private_buses,
+                         local_buses=local_buses,
+                         private_buses=private_buses,
                            flights=flights,
                            road_info=road_info,
-                           origin=origin,
-                           destination=destination,
+                         origin=origin,
+                         destination=destination,
                            travel_date=travel_date,
                            all_cities=sorted(all_cities),
                            today=today_str,
                            max_date=max_date_str,
-                           today_date=today_str)
+                           today_date=today_str,
+                           show_live_bus_map=show_live_bus_map,
+                           route_tourism=route_tourism)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Weather Forecast Helper
@@ -5138,8 +5383,8 @@ def get_weather_forecast(city_name):
 TOURISM_SPOTS = {
     'Madurai': [
         {'name': 'Meenakshi Amman Temple', 'type': 'Religious', 'emoji': '🛕',
-         'description': 'One of the largest temple complexes in India with stunning Dravidian architecture and towering gopurams.',
-         'distance': '0 km from city centre', 'rating': 4.9, 'timings': '5:00 AM – 12:30 PM & 4:00 PM – 10:00 PM', 'entry': 'Free'},
+         'description': 'Historic twin temples of Meenakshi (Parvati) and Sundareswarar (Shiva) in the old city; fourteen gopurams including the famous south tower. Allow 2–3 hours for darshan on busy days.',
+         'distance': '~1 km E of Periyar (Central) bus stand', 'rating': 4.9, 'timings': '5:00 AM – 12:30 PM & 4:00 PM – 10:00 PM', 'entry': 'Free (museum inside paid)'},
         {'name': 'Thirumalai Nayakkar Palace', 'type': 'Heritage', 'emoji': '🏛️',
          'description': 'Impressive 17th-century palace blending Dravidian and Mughal architectural styles.',
          'distance': '1.5 km', 'rating': 4.5, 'timings': '9:00 AM – 5:00 PM', 'entry': '₹50'},
@@ -5194,12 +5439,12 @@ TOURISM_SPOTS = {
          'distance': '28 km', 'rating': 4.6, 'timings': '11:00 AM – 6:00 PM', 'entry': '₹1,050'},
     ],
     'Krishnankovil': [
-        {'name': 'Krishnakoil Vishnu Temple', 'type': 'Religious', 'emoji': '🛕',
-         'description': 'Ancient Vishnu temple with beautiful sculptures, one of the 108 Divya Desams.',
-         'distance': '0 km', 'rating': 4.8, 'timings': '6:00 AM – 12:00 PM & 4:00 PM – 9:00 PM', 'entry': 'Free'},
+        {'name': 'Kalasalingam area & Krishnankovil Vishnu Temple', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'Krishnankovil is best known as the seat of Kalasalingam Academy of Research and Education; the local Vishnu temple is a traditional stop for visitors to the campus belt between Srivilliputhur and Virudhunagar.',
+         'distance': 'At town centre / campus approach', 'rating': 4.8, 'timings': '6:00 AM – 12:00 PM & 4:00 PM – 9:00 PM', 'entry': 'Free'},
         {'name': 'Srivilliputhur Andal Temple', 'type': 'Religious', 'emoji': '🛕',
-         'description': 'Famous Andal temple whose gopuram is the logo of Tamil Nadu government.',
-         'distance': '15 km', 'rating': 4.9, 'timings': '6:00 AM – 12:30 PM & 4:00 PM – 9:00 PM', 'entry': 'Free'},
+         'description': '11th-century Vaishnavite shrine of Andal (Sri Villiputhur Nachiyar); its 11-tier gopuram is depicted on the Government of Tamil Nadu emblem — ~15–18 km by road from Krishnankovil.',
+         'distance': '~15 km NW', 'rating': 4.9, 'timings': '6:00 AM – 12:30 PM & 4:00 PM – 9:00 PM', 'entry': 'Free'},
         {'name': 'Srivilliputhur Wildlife Sanctuary', 'type': 'Nature', 'emoji': '🐆',
          'description': 'Home to elephants, leopards, and rare birds in the Western Ghats foothills.',
          'distance': '18 km', 'rating': 4.3, 'timings': '6:00 AM – 6:00 PM', 'entry': '₹30'},
@@ -5299,12 +5544,257 @@ TOURISM_SPOTS = {
          'description': 'Silicon Valley of India just 40 km away with Lalbagh, Palace and more.',
          'distance': '40 km', 'rating': 4.7, 'timings': 'All day', 'entry': 'Various'},
     ],
+    'Trichy': [
+        {'name': 'Sri Ranganathaswamy Temple, Srirangam', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'Massive Vaishnavite temple on an island — among the largest temple complexes in India.',
+         'distance': '8 km from city centre', 'rating': 4.9, 'timings': '6:00 AM – 9:00 PM', 'entry': 'Free'},
+        {'name': 'Rockfort Ucchi Pillayar Temple', 'type': 'Religious', 'emoji': '⛰️',
+         'description': 'Ancient rock-cut temple atop an 83 m rock with city views.',
+         'distance': '1 km', 'rating': 4.7, 'timings': '6:00 AM – 8:00 PM', 'entry': '₹5'},
+        {'name': 'St. Mary\'s Cathedral', 'type': 'Religious', 'emoji': '⛪',
+         'description': 'Gothic-style Roman Catholic cathedral in the heart of Tiruchirappalli.',
+         'distance': '2 km', 'rating': 4.4, 'timings': '6:00 AM – 8:00 PM', 'entry': 'Free'},
+    ],
+    'Virudhunagar': [
+        {'name': 'Virudhunagar Town Heritage Walk', 'type': 'Local', 'emoji': '🚶',
+         'description': 'Bustling market town — famous for savoury snacks (sevu, mixture) and temples.',
+         'distance': '0 km', 'rating': 4.1, 'timings': 'Daytime', 'entry': 'Free'},
+        {'name': 'Madurai Meenakshi Temple (day trip)', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'World-famous temple ~45 min by road toward Madurai.',
+         'distance': '45 km', 'rating': 4.9, 'timings': '5:00 AM – 10:00 PM', 'entry': 'Free'},
+    ],
+    'Vellore': [
+        {'name': 'Vellore Fort & Jalakandeswarar Temple', 'type': 'Heritage', 'emoji': '🏰',
+         'description': '16th-century fort with a historic Shiva temple inside.',
+         'distance': '0 km', 'rating': 4.5, 'timings': '9:00 AM – 5:00 PM', 'entry': '₹5'},
+        {'name': 'Golden Temple (Sripuram)', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'Stunning gold-covered temple of Mahalakshmi in Thirumalaikodi.',
+         'distance': '8 km', 'rating': 4.8, 'timings': '4:00 AM – 8:00 PM', 'entry': 'Free'},
+    ],
+    'Watrap': [
+        {'name': 'Watrap Lake & surrounds', 'type': 'Nature', 'emoji': '🌿',
+         'description': 'Quiet town between Srivilliputhur and Rajapalayam — good stop for local snacks.',
+         'distance': '0 km', 'rating': 4.0, 'timings': 'Daytime', 'entry': 'Free'},
+        {'name': 'Srivilliputhur Andal Temple (short hop)', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'Iconic gopuram — among the 108 Divya Desams.',
+         'distance': '12 km', 'rating': 4.9, 'timings': '6:00 AM – 9:00 PM', 'entry': 'Free'},
+    ],
+    'Coimbatore': [
+        {'name': 'Marudamalai Murugan Temple', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'Hilltop Murugan temple with views over the Western Ghats.',
+         'distance': '12 km', 'rating': 4.7, 'timings': '6:00 AM – 8:30 PM', 'entry': 'Free'},
+        {'name': 'Gedee Car Museum', 'type': 'Museum', 'emoji': '🚗',
+         'description': 'Vintage and classic cars in a compact museum.',
+         'distance': '5 km', 'rating': 4.3, 'timings': '9:00 AM – 6:00 PM', 'entry': '₹75'},
+    ],
+    'Palani': [
+        {'name': 'Palani Dhandayuthapani Temple', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'Famous hill Murugan temple — one of the six Arupadai Veedu.',
+         'distance': '0 km', 'rating': 4.9, 'timings': '6:00 AM – 9:00 PM', 'entry': 'Free'},
+    ],
+    'Krishnagiri': [
+        {'name': 'Krishnagiri Fort', 'type': 'Heritage', 'emoji': '🏰',
+         'description': 'Hill fort with views; gateway town between Bengaluru and Salem.',
+         'distance': '3 km', 'rating': 4.0, 'timings': '9:00 AM – 5:00 PM', 'entry': 'Free'},
+    ],
+    'Sankarankoil': [
+        {'name': 'Sankaranarayanar Temple', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'Ancient temple blending Shiva and Vishnu in one sanctum.',
+         'distance': '0 km', 'rating': 4.6, 'timings': '6:00 AM – 9:00 PM', 'entry': 'Free'},
+    ],
+    'Thanjavur': [
+        {'name': 'Brihadeeswarar Temple (Big Temple)', 'type': 'UNESCO Heritage', 'emoji': '🛕',
+         'description': '11th-century Chola granite temple — one of the Great Living Chola Temples; towering vimana and Nandi mandapam.',
+         'distance': '~2 km from Thanjavur Jn area', 'rating': 4.9, 'timings': '6:00 AM – 12:30 PM & 4:00 PM – 8:30 PM', 'entry': '₹50 (Indians, check current)'},
+        {'name': 'Thanjavur Maratha Palace & Saraswati Mahal Library', 'type': 'Heritage', 'emoji': '🏛️',
+         'description': 'Royal palace complex with art gallery and rare palm-leaf manuscripts.',
+         'distance': '1 km', 'rating': 4.4, 'timings': '9:00 AM – 5:00 PM (closed Fri)', 'entry': '₹10–50'},
+    ],
+    'Alagapuri': [
+        {'name': 'Village shrines & agrarian belt', 'type': 'Local', 'emoji': '🌾',
+         'description': 'Small hamlet between Krishnankovil and Tirumangalam on many campus buses — quiet rural Tamil landscape; nearest major sights are Tirumangalam / Madurai.',
+         'distance': '0 km', 'rating': 4.0, 'timings': 'Daytime', 'entry': 'Free'},
+    ],
+    'T. Kalupatti': [
+        {'name': 'Local temples & weekly market', 'type': 'Local', 'emoji': '🛕',
+         'description': 'Town en route to Tirumangalam; typical roadside temples and markets — combine with a stop in Tirumangalam or Madurai for major monuments.',
+         'distance': '0 km', 'rating': 4.0, 'timings': 'Morning & evening', 'entry': 'Free'},
+    ],
+    'Sattur': [
+        {'name': 'Sattur Kara Sev & local bazaar', 'type': 'Food & Culture', 'emoji': '🍿',
+         'description': 'This Virudhunagar-district town is famous for savoury snacks (kara sev, mixture) and weekly markets — a classic highway stop between Virudhunagar and Madurai.',
+         'distance': '0 km', 'rating': 4.2, 'timings': 'Daytime', 'entry': 'Free'},
+        {'name': 'Madurai Meenakshi Temple (day trip)', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'World-famous Meenakshi-Sundareswarar temple is a short drive toward Madurai.',
+         'distance': '~45 km', 'rating': 4.9, 'timings': '5:00 AM – 10:00 PM', 'entry': 'Free'},
+    ],
+    'Surandai': [
+        {'name': 'Surandai town & Tenkasi road', 'type': 'Local', 'emoji': '🚶',
+         'description': 'Busy junction between Tenkasi and Tirunelveli — good for local eats before Courtallam or the Nellai belt.',
+         'distance': '0 km', 'rating': 4.0, 'timings': 'Daytime', 'entry': 'Free'},
+        {'name': 'Courtallam waterfalls (short hop)', 'type': 'Nature', 'emoji': '💦',
+         'description': 'Famous falls near Tenkasi — combine with a Tenkasi–Tirunelveli trip.',
+         'distance': '~25–35 km', 'rating': 4.7, 'timings': 'Seasonal hours', 'entry': 'Free'},
+    ],
+    'Karur': [
+        {'name': 'Pasupatheeswarar Temple', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'Ancient Shiva temple on the banks of the Amaravathi; Karur is a major Kongu Nadu junction on Madurai–Coimbatore routes.',
+         'distance': 'Central town', 'rating': 4.5, 'timings': '6:00 AM – 12:00 PM & 4:00 PM – 8:30 PM', 'entry': 'Free'},
+        {'name': 'Mayanur / Amaravathi river ghats', 'type': 'Nature', 'emoji': '🌊',
+         'description': 'Scenic river stretches near Karur — popular for evening walks and local festivals.',
+         'distance': '5–12 km', 'rating': 4.2, 'timings': 'Open', 'entry': 'Free'},
+    ],
+    'Aruppukottai': [
+        {'name': 'Arulmigu Thandu Mariamman Temple', 'type': 'Religious', 'emoji': '🛕',
+         'description': 'Important Amman shrine in the heart of Aruppukottai — the town is a busy hub between Virudhunagar and the coast.',
+         'distance': '0 km', 'rating': 4.4, 'timings': '6:00 AM – 12:00 PM & 4:00 PM – 9:00 PM', 'entry': 'Free'},
+        {'name': 'Virudhunagar & snack trail', 'type': 'Food & Culture', 'emoji': '🍘',
+         'description': 'Pair with Virudhunagar’s famous savoury snacks (sevu, mixture) a short hop away.',
+         'distance': '~15 km', 'rating': 4.2, 'timings': 'Daytime', 'entry': 'Free'},
+    ],
 }
 
 
+TOURISM_PLACE_ALIASES = {
+    'krishnankoil': 'Krishnankovil',
+    'krishnan koil': 'Krishnankovil',
+    'trichy': 'Trichy',
+    'tiruchirappalli': 'Trichy',
+    'dindugal': 'Dindigul',
+    'srivilliputtur': 'Srivilliputhur',
+    'virudhunagar': 'Virudhunagar',
+    'watrap': 'Watrap',
+    'vellore': 'Vellore',
+    'coimbatore': 'Coimbatore',
+    'palani': 'Palani',
+    'krishnagiri': 'Krishnagiri',
+    'sankarankoil': 'Sankarankoil',
+    't. kalupatti': 'T. Kalupatti',
+    't kalupatti': 'T. Kalupatti',
+    'alagapuri': 'Alagapuri',
+    'thanjavur': 'Thanjavur',
+    'tanjore': 'Thanjavur',
+    'sattur': 'Sattur',
+    'surandai': 'Surandai',
+    'karur': 'Karur',
+    'aruppukottai': 'Aruppukottai',
+}
+
+
+def _coerce_via_stops_list(vs):
+    """Turn LocalBus.via_stops into a list of strings (JSON array, or plain text with ; / ,)."""
+    if vs is None:
+        return []
+    if isinstance(vs, (list, tuple)):
+        out = []
+        for x in vs:
+            if x is None:
+                continue
+            s = str(x).strip()
+            if s:
+                out.append(s)
+        return out
+    if isinstance(vs, str):
+        s = vs.strip()
+        if not s:
+            return []
+        try:
+            parsed = json.loads(s)
+            if isinstance(parsed, list):
+                return [str(x).strip() for x in parsed if x is not None and str(x).strip()]
+            if isinstance(parsed, str):
+                s = parsed.strip()
+        except Exception:
+            pass
+        merged = s.replace(',', ';')
+        return [p.strip() for p in merged.split(';') if p.strip()]
+    return []
+
+
+def _sort_tourism_spots(spots):
+    """Higher rating first (more acclaimed / verified in our guide)."""
+    if not spots:
+        return []
+
+    def _rk(s):
+        try:
+            return -float(s.get('rating') or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    return sorted(spots, key=_rk)
+
+
+def _dedupe_tourism_spots(spots):
+    """Avoid listing the same attraction name twice in one column."""
+    seen, out = set(), []
+    for s in spots or []:
+        n = (s.get('name') or '').strip().lower()
+        if not n or n in seen:
+            continue
+        seen.add(n)
+        out.append(s)
+    return out
+
+
+def normalize_tourism_place(name):
+    if not name:
+        return ''
+    s = str(name).strip()
+    if not s:
+        return ''
+    return TOURISM_PLACE_ALIASES.get(s.lower(), s.title())
+
+
 def get_tourism_spots(destination):
-    """Return tourism spots for a given destination."""
-    return TOURISM_SPOTS.get(destination, [])
+    """Return tourism spots for a city name (with common spelling aliases)."""
+    if not destination:
+        return []
+    d = normalize_tourism_place(destination)
+    if d in TOURISM_SPOTS:
+        return TOURISM_SPOTS[d]
+    raw = destination.strip()
+    if raw in TOURISM_SPOTS:
+        return TOURISM_SPOTS[raw]
+    # Title-case fallback for keys that match normalize_tourism_place output
+    t = raw.title()
+    return TOURISM_SPOTS.get(t, [])
+
+
+def tourism_bundle_for_timetables(origin, destination, local_buses_list):
+    """
+    Spots at origin & destination plus famous places at each via stop on returned govt buses.
+    Sorted by rating, de-duplicated, with more entries per column for richer detail.
+    """
+    o = normalize_tourism_place(origin)
+    d = normalize_tourism_place(destination)
+    origin_spots = _sort_tourism_spots(_dedupe_tourism_spots(get_tourism_spots(o) or []))[:8]
+    dest_spots = _sort_tourism_spots(_dedupe_tourism_spots(get_tourism_spots(d) or []))[:8]
+    bundle = {
+        'origin_name': o,
+        'destination_name': d,
+        'origin_spots': origin_spots,
+        'destination_spots': dest_spots,
+        'via_segments': [],
+    }
+    seen = {x for x in (o, d) if x}
+    ordered = []
+    for bus in local_buses_list or []:
+        vs = _coerce_via_stops_list(getattr(bus, 'via_stops', None))
+        for stop in vs:
+            pl = normalize_tourism_place(stop)
+            if not pl or pl in seen:
+                continue
+            seen.add(pl)
+            ordered.append(pl)
+    for pl in ordered:
+        raw = get_tourism_spots(pl)
+        if not raw:
+            continue
+        spots = _sort_tourism_spots(_dedupe_tourism_spots(raw))[:6]
+        if spots:
+            bundle['via_segments'].append({'place': pl, 'spots': spots})
+    return bundle
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -5315,6 +5805,36 @@ PLACES_LIST = [
     'Krishnankovil', 'Sivakasi', 'Srivilliputhur', 'Tirumangalam', 'Tenkasi', 'Rajapalayam',
     'Madurai', 'Dindigul', 'Salem', 'Erode', 'Tiruppur', 'Hosur', 'Chennai', 'Bengaluru'
 ]
+
+# Live GPS map on timetables for these pairs (order-independent keys).
+# Includes Krishnankovil ↔ Madurai/Rajapalayam so campus searches still get the live row + green LED.
+GPS_ENABLED_ROUTE_KEYS = frozenset({
+    'madurai|rajapalayam',
+    'krishnankovil|madurai',
+    'krishnankovil|rajapalayam',
+})
+
+
+def _gps_route_key(origin, destination):
+    """Order-independent key, e.g. madurai|rajapalayam."""
+    a = (origin or '').strip().lower()
+    b = (destination or '').strip().lower()
+    if not a or not b:
+        return ''
+    return '|'.join(sorted([a, b]))
+
+
+def _gps_live_stale_seconds():
+    """
+    Max age of last DB fix to still count as 'live' in JSON.
+    Default 120s: after USB/bridge stops, the site stops showing green within ~2 minutes.
+    Override: env GPS_LIVE_STALE_SECONDS (15–86400).
+    """
+    try:
+        v = int(os.environ.get('GPS_LIVE_STALE_SECONDS', '120'))
+        return max(15, min(86400, v))
+    except (TypeError, ValueError):
+        return 120
 
 
 @app.route('/weather')
@@ -5376,13 +5896,24 @@ def api_weather():
         'mist': '&#127787;', 'haze': '&#127787;', 'fog': '&#127787;',
     }.get(condition, '&#127782;')
 
+    _ALIASE_DESC = {
+        'sunny': 'Clear skies',
+        'cloudy': 'Overcast',
+        'rainy': 'Rain',
+        'foggy': 'Fog or mist',
+        'partly_cloudy': 'Partly cloudy',
+    }
+    description = weather.get('description') or weather.get('forecast') or _ALIASE_DESC.get(
+        condition, (weather.get('condition') or 'Weather').replace('_', ' ').title()
+    )
+
     return jsonify({
         'status':      'ok',
         'city':        city_norm,
         'weather': {
             'temperature': weather.get('temperature'),
             'feels_like':  weather.get('feels_like'),
-            'description': weather.get('description'),
+            'description': description,
             'humidity':    weather.get('humidity'),
             'wind_speed':  weather.get('wind_speed'),
             'condition':   condition,
@@ -5390,6 +5921,132 @@ def api_weather():
         },
         'suggestions': [s.get('message','') for s in suggestions],
         'travel_tips': travel_tips,
+    })
+
+
+@app.route('/api/gps/update', methods=['POST', 'OPTIONS'])
+@csrf.exempt
+def api_gps_update():
+    """
+    Ingest GPS from on-board device (ESP32 / Arduino + WiFi).
+    JSON body: api_key, latitude, longitude, speed_kmh (optional), bus_number,
+               route_origin, route_destination, device_id (optional).
+    Set env GPS_API_KEY on the server; same value in firmware.
+    """
+    if request.method == 'OPTIONS':
+        return '', 204
+
+    secret = os.environ.get('GPS_API_KEY', 'yatra-gps-dev-key-change-me')
+    try:
+        data = request.get_json(silent=True) or {}
+    except Exception:
+        data = {}
+
+    key = data.get('api_key') or request.headers.get('X-GPS-Api-Key') or request.args.get('api_key')
+    if not key or key != secret:
+        return jsonify({'status': 'error', 'message': 'invalid or missing api_key'}), 401
+
+    try:
+        lat = float(data.get('latitude'))
+        lng = float(data.get('longitude'))
+    except (TypeError, ValueError):
+        return jsonify({'status': 'error', 'message': 'latitude and longitude required (numbers)'}), 400
+
+    ro = (data.get('route_origin') or '').strip()
+    rd = (data.get('route_destination') or '').strip()
+    rk = _gps_route_key(ro, rd)
+    if rk not in GPS_ENABLED_ROUTE_KEYS:
+        return jsonify({
+            'status': 'error',
+            'message': 'route not enabled for GPS. Use Rajapalayam + Madurai.',
+            'route_key': rk or None,
+        }), 400
+
+    speed = data.get('speed_kmh')
+    try:
+        speed = float(speed) if speed is not None else 0.0
+    except (TypeError, ValueError):
+        speed = 0.0
+
+    bus_number = (data.get('bus_number') or 'TN55L 9003').strip()[:40]
+    device_id = (data.get('device_id') or 'bus1').strip()[:64]
+
+    heading = data.get('heading')
+    try:
+        heading = float(heading) if heading is not None else None
+    except (TypeError, ValueError):
+        heading = None
+
+    now = datetime.utcnow()
+    row = BusGPSTelemetry.query.filter_by(route_key=rk, device_id=device_id).first()
+    if row:
+        row.latitude = lat
+        row.longitude = lng
+        row.speed_kmh = speed
+        row.bus_number = bus_number
+        row.heading = heading
+        row.last_updated = now
+    else:
+        row = BusGPSTelemetry(
+            route_key=rk,
+            device_id=device_id,
+            bus_number=bus_number,
+            latitude=lat,
+            longitude=lng,
+            speed_kmh=speed,
+            heading=heading,
+            last_updated=now,
+        )
+        db.session.add(row)
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        app.logger.exception('gps commit: %s', e)
+        return jsonify({'status': 'error', 'message': 'database error'}), 500
+
+    return jsonify({'status': 'ok', 'route_key': rk, 'bus_number': bus_number, 'last_updated': now.isoformat() + 'Z'})
+
+
+@app.route('/api/gps/live', methods=['GET', 'OPTIONS'])
+def api_gps_live():
+    """Public: live bus positions only when origin/destination match an enabled GPS route."""
+    if request.method == 'OPTIONS':
+        return '', 204
+
+    origin = request.args.get('origin', '').strip()
+    destination = request.args.get('destination', '').strip()
+    _ALI = {
+        'krishnankoil': 'Krishnankovil', 'krishnan koil': 'Krishnankovil',
+        'srivilliputtur': 'Srivilliputhur', 'bangalore': 'Bengaluru',
+    }
+
+    def _nn(c):
+        if not c:
+            return ''
+        return _ALI.get(c.lower().strip(), c.strip().title())
+
+    o = _nn(origin)
+    d = _nn(destination)
+    rk = _gps_route_key(o, d)
+    if rk not in GPS_ENABLED_ROUTE_KEYS:
+        return jsonify({
+            'status': 'ok',
+            'tracked': False,
+            'message': 'Live GPS is only available for Rajapalayam ↔ Madurai.',
+            'buses': [],
+        })
+
+    rows = BusGPSTelemetry.query.filter_by(route_key=rk).all()
+    stale_sec = _gps_live_stale_seconds()
+    buses = [r.to_live_dict(stale_seconds=stale_sec) for r in rows]
+    return jsonify({
+        'status': 'ok',
+        'tracked': True,
+        'route_key': rk,
+        'route_label': 'Rajapalayam - Madurai',
+        'live_stale_after_seconds': stale_sec,
+        'buses': buses,
     })
 
 
@@ -5703,7 +6360,7 @@ def init_landmarks():
         return jsonify({'error': 'Unauthorized'}), 403
     
     landmarks_data = [
-        {'name': 'Krishnankovil Tea Stall', 'landmark_type': 'tea_stall', 'location': 'Krishnankovil', 'lat': 9.6231, 'lng': 77.8245, 'is_rest_point': True},
+        {'name': 'Krishnankovil Tea Stall', 'landmark_type': 'tea_stall', 'location': 'Krishnankovil', 'lat': 9.572774, 'lng': 77.678473, 'is_rest_point': True},
         {'name': 'Srivilliputhur ATM', 'landmark_type': 'atm', 'location': 'Srivilliputhur', 'lat': 9.5121, 'lng': 77.6336, 'is_rest_point': False},
         {'name': 'Srivilliputhur Petrol Bunk', 'landmark_type': 'petrol_bunk', 'location': 'Srivilliputhur', 'lat': 9.5150, 'lng': 77.6350, 'is_rest_point': False},
         {'name': 'Tiruthangal Tea Stall', 'landmark_type': 'tea_stall', 'location': 'Tiruthangal', 'lat': 9.4833, 'lng': 77.8167, 'is_rest_point': True},
@@ -5830,10 +6487,10 @@ CITY_TO_IATA = {
 
 # City coordinates for nearby-airport search
 CITY_COORDS = {
-    # Krishnankovil alternate spellings
-    'krishnankovil':(9.4897,77.7177),'krishnankoil':(9.4897,77.7177),
-    'krishnan kovil':(9.4897,77.7177),'krishnan koil':(9.4897,77.7177),
-    'krishnankoil ': (9.4897,77.7177),
+    # Krishnankovil (KARE / town area — aligned with local GPS fixes)
+    'krishnankovil':(9.572774,77.678473),'krishnankoil':(9.572774,77.678473),
+    'krishnan kovil':(9.572774,77.678473),'krishnan koil':(9.572774,77.678473),
+    'krishnankoil ': (9.572774,77.678473),
     'srivilliputhur':(9.5121,77.6336),'srivilliputtur':(9.5121,77.6336),
     'sivakasi':(9.4514,77.8086),'virudhunagar':(9.5849,77.9559),
     'rajapalayam':(9.4529,77.5568),'tenkasi':(8.9593,77.3152),
